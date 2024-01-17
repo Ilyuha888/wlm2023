@@ -5,14 +5,33 @@
 REPLACE ALL pr7 TO pr<n> WITH MATCH CASE
 -->
 ```
+
+```{r opts, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r pkgs, eval=TRUE}
+library(tidyverse)
+theme_set(theme_bw())
+```
+
+{{< include ../book/_symbols.qmd >}}
+
 ## Основные задания {#pr7_main}
 
-### #1
+### #1 {#pr7-1-title}
 
 <img id="pr7-1-level" class="level"/>
 
 ::: {#pr7-1-task .task}
-Текст задания `переменная`.
+
+Какова вероятность, что при броске трехгранного игрального кубика:
+
+a. выпадет число от 1 до 3?
+a. выпадет 1?
+a. выпадет 3?
+a. выпадет 4?
+
 :::
 
 ::: {#pr7-1-autocheck .autocheck}
@@ -28,7 +47,7 @@ REPLACE ALL pr7 TO pr<n> WITH MATCH CASE
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-1-hints">
 
 <summary>Подсказки</summary>
@@ -54,14 +73,19 @@ REPLACE ALL pr7 TO pr<n> WITH MATCH CASE
 </details>
 :::
 
-### #2
+### #2 {#pr7-2-title}
 
 <img id="pr7-2-level" class="level"/>
 
 ::: {#pr7-2-task .task}
-Текст задания.
 
-$$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
+Какова вероятность, что при броске четырехгранного игрального кубика выпадет:
+
+a. выпадет 1?
+a. выпадет 1 или 2?
+a. выпадет 1, 2 или 3?
+a. выпадет 2 или 4?
+
 :::
 
 ::: {#pr7-2-autocheck .autocheck}
@@ -77,7 +101,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-2-hints">
 
 <summary>Подсказки</summary>
@@ -103,13 +127,37 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #3
+### #3 {#pr7-3-title}
 
 <img id="pr7-3-level" class="level"/>
 
 ::: {#pr7-3-task .task}
-Текст задания.
+
+По [ссылке](https://github.com/angelgardt/wlm2023/raw/master/data/pr7/dice.RData) расположен файл `.RData` с симуляцией двух четырехгранных игральных кубиков `dice1` и `dice2`. Один из них является честным, другой --- нечестным.
+
+Выясните, каким именно является каким.
+
 :::
+
+```{r pr7-3-dice}
+# rm(list = ls())
+dice1 <- function(n) {
+  sample(1:4, n, replace = TRUE)
+}
+dice2 <- function(n) {
+  sample(1:4, n, replace = TRUE, prob = c(rep(1, 3), 2))
+}
+save.image("../data/pr7/dice.RData")
+rm(list = ls())
+```
+
+```{r}
+load(url("https://github.com/angelgardt/wlm2023/raw/master/data/pr7/dice.RData"))
+
+dice1(10000) %>% table() %>% `/`(10000)
+dice2(10000) %>% table() %>% `/`(10000)
+
+```
 
 ::: {#pr7-3-autocheck .autocheck}
 ::: {#pr7-3-ir .input-requirements}
@@ -124,7 +172,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-3-hints">
 
 <summary>Подсказки</summary>
@@ -150,13 +198,49 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #4
+### #4 {#pr7-4-title}
 
 <img id="pr7-4-level" class="level"/>
 
 ::: {#pr7-4-task .task}
-Текст задания.
+
+Если дискретная случайная величина определена на конечном множестве элементрных исходов, то её функцию вероятности можно задать с помощью таблицы:
+
+|$X$|$x_1$|$x_2$|$x_3$|$...$|$x_n$|
+|:---|:---|:---|:---|:---|:---|
+|$\prob(X=x)$|$p_1$|$p_2$|$p_3$|$...$|$p_n$|
+
+Тогда математическое ожидание такой случайной величины будет определяться следующим образом:
+
+$$
+\expect(X) = \sum_{i=1}^n x_i p_i
+$$
+
+Дана случайная величина $X$ со следующей функцией вероятности:
+
+|$x$|$0$|$2$|$4$|$8$|$9$|
+|:---|:---|:---|:---|:---|:---|
+|$\prob(X=x)$|$0.2$|$0.3$|$0.1$|$0.15$|$0.25$|
+
+Найдите математическое ожидание данной случайное величины.
+
+[Отсюда](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr7/pr7-4.csv) можно скачать таблицу, задающую функцию вероятности этой случайной величины.
+
 :::
+
+```{r pr7-4-table}
+tibble(x = c(0,2,4,8,9),
+       p = c(.2,.3,.1,.15,.25)) %>% 
+  write_csv("../data/pr7-4.csv")
+```
+
+```{r}
+
+pr7_4 <- read_csv("https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr7/pr7-4.csv")
+(pr7_4$x * pr7_4$p) %>% sum()
+
+```
+
 
 ::: {#pr7-4-autocheck .autocheck}
 ::: {#pr7-4-ir .input-requirements}
@@ -171,7 +255,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-4-hints">
 
 <summary>Подсказки</summary>
@@ -197,13 +281,26 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #5
+### #5 {#pr7-5-title}
 
 <img id="pr7-5-level" class="level"/>
 
 ::: {#pr7-5-task .task}
-Текст задания.
+
+По таблице функции вероятности дискретной случайной величины можно найти и её дисперсию. Она определяется по формуле:
+
+$$
+\var(X) = \expect(X^2) - \big(\expect(X)\big)^2
+$$
+
+Для случайной величины из предыдущего задания найдите её дисперсию.
+
 :::
+
+```{r}
+pr7_4$x2 <- pr7_4$x^2
+((pr7_4$x2 * pr7_4$p) %>% sum()) - ((pr7_4$x * pr7_4$p) %>% sum())^2
+```
 
 ::: {#pr7-5-autocheck .autocheck}
 ::: {#pr7-5-ir .input-requirements}
@@ -218,7 +315,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-5-hints">
 
 <summary>Подсказки</summary>
@@ -244,13 +341,39 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #6
+### #6 {#pr7-6-title}
 
 <img id="pr7-6-level" class="level"/>
 
 ::: {#pr7-6-task .task}
-Текст задания.
+
+Рассчитайте дисперсию следующей случайной величины:
+
+|$x$|$-2$|$-1$|$1$|$3$|$4$|
+|:---|:---|:---|:---|:---|:---|
+|$\prob(X=x)$|$0.35$|$0.28$|$0.16$|$0.05$|$0.16$|
+
+[Тут](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr7/pr7-6.csv) можно скачать таблицу.
+
 :::
+
+```{r pr7-6-data}
+tibble(x = c(-2, -1, 1, 3, 4),
+       p = c(0.35, 0.28, 0.16, .05, .16)) %>% 
+  write_csv("../data/pr7/pr7-6.csv")
+```
+
+```{r}
+read_csv("https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr7/pr7-6.csv") -> pr7_6
+
+pr7_6 %>% 
+  mutate(x2 = x^2) %>% 
+  summarise(p = sum(p),
+            .by = x2) -> pr7_6_2
+
+
+(pr7_6_2$x2 * pr7_6_2$p) %>% sum() - ((pr7_6$x * pr7_6$p) %>% sum())^2
+```
 
 ::: {#pr7-6-autocheck .autocheck}
 ::: {#pr7-6-ir .input-requirements}
@@ -265,7 +388,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-6-hints">
 
 <summary>Подсказки</summary>
@@ -291,13 +414,22 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #7
+### #7 {#pr7-7-title}
 
 <img id="pr7-7-level" class="level"/>
 
 ::: {#pr7-7-task .task}
-Текст задания.
+
+Визуализируйте функцию вероятности случайной величины из предыдущего задания.
+
 :::
+
+```{r}
+pr7_6 %>% 
+  ggplot(aes(factor(x, ordered = TRUE), p)) +
+  geom_point() +
+  labs(x = "X", y = "Probability")
+```
 
 ::: {#pr7-7-autocheck .autocheck}
 ::: {#pr7-7-ir .input-requirements}
@@ -312,7 +444,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-7-hints">
 
 <summary>Подсказки</summary>
@@ -338,13 +470,22 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #8
+### #8 {#pr7-8-title}
 
 <img id="pr7-8-level" class="level"/>
 
 ::: {#pr7-8-task .task}
-Текст задания.
+
+Некоторая случайная величина подчиняется нормальному распределению с параметрами $\mu = 1.5$ и $\sigma^2 = 2.1$. Визуализируйте график функции плотности распределения этой случайной величины.
+
 :::
+
+```{r, eval=TRUE}
+ggplot() +
+  geom_function(fun = dnorm, args = list(mean = 1.5, sd = sqrt(2.1))) +
+  xlim(-10, 10)
+```
+
 
 ::: {#pr7-8-autocheck .autocheck}
 ::: {#pr7-8-ir .input-requirements}
@@ -359,7 +500,8 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
+
 <details class="hints" id="pr7-8-hints">
 
 <summary>Подсказки</summary>
@@ -383,15 +525,29 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 
 </details>
+
 :::
 
-### #9
+### #9 {#pr7-9-title}
 
 <img id="pr7-9-level" class="level"/>
 
 ::: {#pr7-9-task .task}
-Текст задания.
+
+Рассчитайте вероятность того, что случайная величина $X \thicksim \mathcal N(1.5, 2.1)$ из предыдущего задания принимает значения:
+
+a. меньшие 5 
+a. большие 4
+a. от -1 до 1
+
 :::
+
+```{r}
+integrate(dnorm, -Inf, 5, mean = 1.5, sd = sqrt(2.1))
+integrate(dnorm, 4, +Inf, mean = 1.5, sd = sqrt(2.1))
+1 - integrate(dnorm, -Inf, 4, mean = 1.5, sd = sqrt(2.1))$value
+integrate(dnorm, -1, 1, mean = 1.5, sd = sqrt(2.1))
+```
 
 ::: {#pr7-9-autocheck .autocheck}
 ::: {#pr7-9-ir .input-requirements}
@@ -406,7 +562,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-9-hints">
 
 <summary>Подсказки</summary>
@@ -432,13 +588,20 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #10
+### #10 {#pr7-10-title}
 
 <img id="pr7-10-level" class="level"/>
 
 ::: {#pr7-10-task .task}
-Текст задания.
+
+Вы генерируете ID для ваших респондентов как случайную последовательность пяти буквенных символов. Используются только латинские буквы нижнего регистра. В каждом случае символ выбирается случайно. Какова вероятность, что вы сгенерируете ID из пяти одинаковых символов?
+
 :::
+
+```{r}
+# length(letters)
+(1/26)^5
+```
 
 ::: {#pr7-10-autocheck .autocheck}
 ::: {#pr7-10-ir .input-requirements}
@@ -453,7 +616,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-10-hints">
 
 <summary>Подсказки</summary>
@@ -479,13 +642,27 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #11
+### #11 {#pr7-11-title}
 
 <img id="pr7-11-level" class="level"/>
 
 ::: {#pr7-11-task .task}
-Текст задания.
+
+Чтобы набрать выборку для качественное апробации новой психометрической методики вы обратились в три рекрутинговых агенства. Первое агенство нашло для вас 130 потенциальных респондентов, второе --- 201, третье --- 94. Из интернет отзывов известно, что среди респондентов первого агенства в среднем попадается 5% профессиональных респондетов, второго --- 7%, а третьего --- 2.5%.
+
+Из всех потенциальных респондентов вы выбираете рандомизатором случайного. Какова вероятность, что это профессиональный респондент?
+
 :::
+
+```{r}
+
+agent1 = 130 / (130+201+94)
+agent2 = 201 / (130+201+94)
+agent3 = 94 / (130+201+94)
+
+agent1 * .05 + agent2 * .07 + agent3 * .025
+
+```
 
 ::: {#pr7-11-autocheck .autocheck}
 ::: {#pr7-11-ir .input-requirements}
@@ -500,7 +677,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-11-hints">
 
 <summary>Подсказки</summary>
@@ -526,13 +703,23 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #12
+### #12 {#pr7-12-title}
 
-<img class="level"/>
+<img id="pr7-12-level" class="level"/>
 
 ::: {#pr7-12-task .task}
-Текст задания.
+
+Выбранный вами в предыдущем задании респондент действительно оказался профессиональным. Какова вероятность, что он был рекрутирован 
+
+* первым агенством?
+* вторым агенством?
+
 :::
+
+```{r}
+(agent1 * 0.05) / (agent1 * .05 + agent2 * .07 + agent3 * .025)
+# (agent3 * 0.07) / (agent1 * .05 + agent2 * .07 + agent3 * .025)
+```
 
 ::: {#pr7-12-autocheck .autocheck}
 ::: {#pr7-12-ir .input-requirements}
@@ -547,7 +734,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-12-hints">
 
 <summary>Подсказки</summary>
@@ -573,13 +760,25 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #13
+### #13 {#pr7-13-title}
 
 <img id="pr7-13-level" class="level"/>
 
 ::: task
-Текст задания.
+
+Студент решает тест из 10 вопросов. Он вообще не в курсе по какому предмету этот тест, поэтому отвечает наугад. В каждом вопросе теста четыре варианта ответа, только один из которых правильный. Тест хорошо сконструирован, поэтому все альтернативы в каждом вопросе равнозначны, а вопросы не связаны друг с другом.
+
+Какова вероятность, что бедолага-студент:
+
+a. ответит на все вопросы верно?
+a. ответит на все вопросы неверно?
+
 :::
+
+```{r}
+(1/4)^10
+(3/4)^10
+```
 
 ::: {#pr7-13-autocheck .autocheck}
 ::: {#pr7-13-ir .input-requirements}
@@ -594,7 +793,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-13-hints">
 
 <summary>Подсказки</summary>
@@ -620,13 +819,23 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #14
+### #14 {#pr7-14-title}
 
 <img id="pr7-14-level" class="level"/>
 
 ::: {#pr7-14-task .task}
-Текст задания.
+
+Чтобы сдать тест, бедному студенту из предыдущео задания необходимо ответить правильно хотя бы на 6 любых вопросов. Какова вероятность, что наш студент сдаст тест?
+
 :::
+
+```{r}
+choose(10, 6) * (1/4)^6 * (3/4)^4 +
+  choose(10, 7) * (1/4)^7 * (3/4)^3 +
+  choose(10, 8) * (1/4)^8 * (3/4)^2 +
+  choose(10, 9) * (1/4)^9 * (3/4)^1 +
+  choose(10, 10) * (1/4)^10 * (3/4)^0
+```
 
 ::: {#pr7-14-autocheck .autocheck}
 ::: {#pr7-14-ir .input-requirements}
@@ -641,7 +850,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-14-hints">
 
 <summary>Подсказки</summary>
@@ -667,13 +876,24 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #15
+### #15 {#pr7-15-title}
 
 <img id="pr7-15-level" class="level"/>
 
 ::: {#pr7-15-task .task}
-Текст задания.
+
+Известно, что распределения --- даже нормальное --- могут быть разными. Достаточно часто --- примерное всегда --- нам придется сравнивать случайные величины друг с другом на основе их распределений. Однако распределения с разными параметрами сравнивать достаточно трудно --- нам надо научиться приводить разные распределения к одним и тем же параметрам.
+
+У нас есть два распределения --- $\mathcal N(0, 5)$ и $\mathcal N(3, 5)$. Обоснуйте, что из всех значений второго распределения можно вычесть $3$ и превратить его в первое распределение.
+
 :::
+
+```{r, eval=TRUE}
+ggplot() +
+  geom_function(fun = dnorm, args = list(mean = 0, sd = sqrt(5)), color = "black") +
+  geom_function(fun = dnorm, args = list(mean = 3, sd = sqrt(5)), color = "red4") +
+  xlim(-10, 10)
+```
 
 ::: {#pr7-15-autocheck .autocheck}
 ::: {#pr7-15-ir .input-requirements}
@@ -688,7 +908,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-15-hints">
 
 <summary>Подсказки</summary>
@@ -714,13 +934,24 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #16
+### #16 {#pr7-16-title}
 
 <img id="pr7-16-level" class="level"/>
 
 ::: {#pr7-16-task .task}
-Текст задания.
+
+Подолжает делать возможным сравнение разных распределений.
+
+У нас есть два распределения --- $\mathcal N(0, 1)$ и $\mathcal N(0, 10)$. Обоснуйте, что можно все значения второго распределения поделить на $\sigma = \sqrt{10}$ и превратить его в первое распределение.
+
 :::
+
+```{r, eval=TRUE}
+ggplot() +
+  geom_function(fun = dnorm, args = list(mean = 0, sd = 1), color = "black") +
+  geom_function(fun = dnorm, args = list(mean = 0, sd = sqrt(10)), color = "red4") +
+  xlim(-10, 10)
+```
 
 ::: {#pr7-16-autocheck .autocheck}
 ::: {#pr7-16-ir .input-requirements}
@@ -735,7 +966,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-16-hints">
 
 <summary>Подсказки</summary>
@@ -761,13 +992,41 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #17
+### #17 {#pr7-17-title}
 
 <img id="pr7-17-level" class="level"/>
 
 ::: {#pr7-17-task .task}
-Текст задания.
+
+Если мы соединим две операции из предыдущих заданий, мы получим **стандартизацию**. Эта операция приводит любое нормальное распределение к **стандартному нормальному распределению** $\mathcal N(0, 1)$.
+
+$$
+z_i = \frac{x_i - \bar x}{\sigma_x}
+$$
+
+1. Сгенерируйте нормально распределенную случайную величину (1000 значений) с параметрами $\mu = 10$, $\sigma^2 = 25$ (`set.seed(120)`).
+1. Визуализируйте распределение получившейся величины.
+1. Выполните стандартизацию сгенерированной случайной величины.
+1. Визуализируйте распределение стандартизированной случайной величины.
+
 :::
+
+```{r, eval=TRUE}
+set.seed(120)
+tibble(x = rnorm(1000, mean = 10, sd = 5),
+       x_s = scale(x)) -> tib
+
+tib %>% 
+  ggplot(aes(x)) +
+  geom_histogram() +
+  labs(x = "X", y = "Count")
+
+tib %>% 
+  ggplot(aes(x_s)) +
+  geom_histogram(aes(y = after_stat(density))) +
+  geom_function(fun = dnorm) +
+  labs(x = "X", y = "Density")
+```
 
 ::: {#pr7-17-autocheck .autocheck}
 ::: {#pr7-17-ir .input-requirements}
@@ -782,7 +1041,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-17-hints">
 
 <summary>Подсказки</summary>
@@ -808,12 +1067,18 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #18
+### #18 {#pr7-18-title}
 
 <img id="pr7-18-level" class="level"/>
 
 ::: {#pr7-18-task .task}
-Текст задания.
+
+Если можно выполнить стандартизацию, то можно выполнить и обратное преобразование --- привести стандартное нормальное распределение к распределению с некоторыми параметрами $\mathcal N(\mu, \sigma^2)$.
+
+$$
+x_i = z_i \times \sigma_x + \bar x
+$$
+
 :::
 
 ::: {#pr7-18-autocheck .autocheck}
@@ -829,7 +1094,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-18-hints">
 
 <summary>Подсказки</summary>
@@ -855,12 +1120,18 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #19
+### #19 {#pr7-19-title}
 
 <img id="pr7-19-level" class="level"/>
 
 ::: {#pr7-19-task .task}
-Текст задания.
+
+Однако стандартизировать можно в общем случае не только нормально распределенные величины, так как для любой случайной величины мы можем рассчитать среднее и стандартное отклонение. Однако здесь возникает вопрос: а не изменится ли форма распределения при выполнении стандартизации? Не потеряем ли мы какой-то важной информации?
+
+**Утверждение:** стандартизация не меняет форму распределения.
+
+Проверьте, справедливо ли это утверждение с помощью симуляции.
+
 :::
 
 ::: {#pr7-19-autocheck .autocheck}
@@ -876,7 +1147,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-19-hints">
 
 <summary>Подсказки</summary>
@@ -902,13 +1173,26 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #20
+### #20 {#pr7-20-title}
 
 <img id="pr7-20-level" class="level"/>
 
 ::: {#pr7-20-task .task}
-Текст задания.
+
+Мы говорили на лекции о том, что главными характеристиками статистических данных являются неопределенность и вариативность. Давайте посмотрим, как это проявляется на распределениях.
+
+Сгенерируйте 12 выборок по 60 наблюдений из нормального распределения $\mathcal N(3, 4)$. Вызуализируйте распределение переменной в каждой из выборок и сравните их друг с другом.
+
 :::
+
+```{r}
+matrix(rnorm(12*60, mean = 4, sd = 2), ncol = 12) %>% 
+  as_tibble() %>% 
+  pivot_longer(cols = everything()) %>% 
+  ggplot(aes(value)) +
+  geom_histogram() +
+  facet_wrap(~ name)
+```
 
 ::: {#pr7-20-autocheck .autocheck}
 ::: {#pr7-20-ir .input-requirements}
@@ -923,7 +1207,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr7-20-hints">
 
 <summary>Подсказки</summary>
@@ -949,477 +1233,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-## Дополнительные задания {#pr7_add}
 
-### #1
-
-<img id="pr7-21-level" class="level"/>
-
-::: {#pr7-21-task .task}
-Текст задания.
-:::
-
-::: {#pr7-21-autocheck .autocheck}
-::: {#pr7-21-ir .input-requirements}
-Описание формата инпута.
-:::
-
-<input class="autocheck-input" type="text" id="pr7-21" placeholder="Введите ответ…">
-
-<input class="autocheck-button" type="button" value="Проверить" onclick="check('pr7-21')">
-
-::: {#pr7-21-fb .autocheck-feedback}
-:::
-:::
-
-::: hints-wrapper
-<details class="hints" id="pr7-21-hints">
-
-<summary>Подсказки</summary>
-
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
-
-</details>
-:::
-
-### #2
-
-<img id="pr7-22-level" class="level"/>
-
-::: {#pr7-22-task .task}
-Текст задания.
-:::
-
-::: {#pr7-22-autocheck .autocheck}
-::: {#pr7-22-ir .input-requirements}
-Описание формата инпута.
-:::
-
-<input class="autocheck-input" type="text" id="pr7-22" placeholder="Введите ответ…">
-
-<input class="autocheck-button" type="button" value="Проверить" onclick="check('pr7-22')">
-
-::: {#pr7-22-fb .autocheck-feedback}
-:::
-:::
-
-::: hints-wrapper
-<details class="hints" id="pr7-22-hints">
-
-<summary>Подсказки</summary>
-
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
-
-</details>
-:::
-
-### #3
-
-<img id="pr7-23-level" class="level"/>
-
-::: {#pr7-23-task .task}
-Текст задания.
-:::
-
-::: {#pr7-23-autocheck .autocheck}
-::: {#pr7-23-ir .input-requirements}
-Описание формата инпута.
-:::
-
-<input class="autocheck-input" type="text" id="pr7-23" placeholder="Введите ответ…">
-
-<input class="autocheck-button" type="button" value="Проверить" onclick="check('pr7-23')">
-
-::: {#pr7-23-fb .autocheck-feedback}
-:::
-:::
-
-::: hints-wrapper
-<details class="hints" id="pr7-23-hints">
-
-<summary>Подсказки</summary>
-
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
-
-</details>
-:::
-
-### #4
-
-<img id="pr7-24-level" class="level"/>
-
-::: {#pr7-24-task .task}
-Текст задания.
-:::
-
-::: {#pr7-24-autocheck .autocheck}
-::: {#pr7-24-ir .input-requirements}
-Описание формата инпута.
-:::
-
-<input class="autocheck-input" type="text" id="pr7-24" placeholder="Введите ответ…">
-
-<input class="autocheck-button" type="button" value="Проверить" onclick="check('pr7-24')">
-
-::: {#pr7-24-fb .autocheck-feedback}
-:::
-:::
-
-::: hints-wrapper
-<details class="hints" id="pr7-24-hints">
-
-<summary>Подсказки</summary>
-
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
-
-</details>
-:::
-
-### #5
-
-<img id="pr7-25-level" class="level"/>
-
-::: {#pr7-25-task .task}
-Текст задания.
-:::
-
-::: {#pr7-25-autocheck .autocheck}
-::: {#pr7-25-ir .input-requirements}
-Описание формата инпута.
-:::
-
-<input class="autocheck-input" type="text" id="pr7-25" placeholder="Введите ответ…">
-
-<input class="autocheck-button" type="button" value="Проверить" onclick="check('pr7-25')">
-
-::: {#pr7-25-fb .autocheck-feedback}
-:::
-:::
-
-::: hints-wrapper
-<details class="hints" id="pr7-25-hints">
-
-<summary>Подсказки</summary>
-
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
-
-</details>
-:::
-
-### #6
-
-<img id="pr7-26-level" class="level"/>
-
-::: {#pr7-26-task .task}
-Текст задания.
-:::
-
-::: {#pr7-26-autocheck .autocheck}
-::: {#pr7-26-ir .input-requirements}
-Описание формата инпута.
-:::
-
-<input class="autocheck-input" type="text" id="pr7-26" placeholder="Введите ответ…">
-
-<input class="autocheck-button" type="button" value="Проверить" onclick="check('pr7-26')">
-
-::: {#pr7-26-fb .autocheck-feedback}
-:::
-:::
-
-::: hints-wrapper
-<details class="hints" id="pr7-26-hints">
-
-<summary>Подсказки</summary>
-
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
-
-</details>
-:::
-
-### #7
-
-<img id="pr7-27-level" class="level"/>
-
-::: {#pr7-27-task .task}
-Текст задания.
-:::
-
-::: {#pr7-27-autocheck .autocheck}
-::: {#pr7-27-ir .input-requirements}
-Описание формата инпута.
-:::
-
-<input class="autocheck-input" type="text" id="pr7-27" placeholder="Введите ответ…">
-
-<input class="autocheck-button" type="button" value="Проверить" onclick="check('pr7-27')">
-
-::: {#pr7-27-fb .autocheck-feedback}
-:::
-:::
-
-::: hints-wrapper
-<details class="hints" id="pr7-27-hints">
-
-<summary>Подсказки</summary>
-
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
-
-</details>
-:::
-
-### #8
-
-<img id="pr7-28-level" class="level"/>
-
-::: {#pr7-28-task .task}
-Текст задания.
-:::
-
-::: {#pr7-28-autocheck .autocheck}
-::: {#pr7-28-ir .input-requirements}
-Описание формата инпута.
-:::
-
-<input class="autocheck-input" type="text" id="pr7-28" placeholder="Введите ответ…">
-
-<input class="autocheck-button" type="button" value="Проверить" onclick="check('pr7-28')">
-
-::: {#pr7-28-fb .autocheck-feedback}
-:::
-:::
-
-::: hints-wrapper
-<details class="hints" id="pr7-28-hints">
-
-<summary>Подсказки</summary>
-
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
-
-</details>
-:::
-
-### #9
-
-<img id="pr7-29-level" class="level"/>
-
-::: {#pr7-29-task .task}
-Текст задания.
-:::
-
-::: {#pr7-29-autocheck .autocheck}
-::: {#pr7-29-ir .input-requirements}
-Описание формата инпута.
-:::
-
-<input class="autocheck-input" type="text" id="pr7-29" placeholder="Введите ответ…">
-
-<input class="autocheck-button" type="button" value="Проверить" onclick="check('pr7-29')">
-
-::: {#pr7-29-fb .autocheck-feedback}
-:::
-:::
-
-::: hints-wrapper
-<details class="hints" id="pr7-29-hints">
-
-<summary>Подсказки</summary>
-
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
-
-</details>
-:::
-
-### #10
-
-<img id="pr7-30-level" class="level"/>
-
-::: {#pr7-30-task .task}
-Текст задания.
-:::
-
-::: {#pr7-30-autocheck .autocheck}
-::: {#pr7-30-ir .input-requirements}
-Описание формата инпута.
-:::
-
-<input class="autocheck-input" type="text" id="pr7-30" placeholder="Введите ответ…">
-
-<input class="autocheck-button" type="button" value="Проверить" onclick="check('pr7-30')">
-
-::: {#pr7-30-fb .autocheck-feedback}
-:::
-:::
-
-::: hints-wrapper
-<details class="hints" id="pr7-30-hints">
-
-<summary>Подсказки</summary>
-
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
-
-</details>
-:::
 
 ```{=html}
 <!--- CHANGE pr7 TO pr<n> IN THE LINES BELOW--->

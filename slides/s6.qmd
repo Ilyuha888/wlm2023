@@ -1,5 +1,5 @@
 ---
-title: "L6. Оценивание параметров в практике статистического анализа. Тестирование статистических гипотез"
+title: "L6 // Оценивание параметров в практике статистического анализа. Тестирование статистических гипотез"
 author: "Антон Ангельгардт"
 format: 
   revealjs:
@@ -12,7 +12,21 @@ format:
 highlight-style: github
 ---
 
-## Зачем?
+
+## Что будет?
+
+{{< include ../book/_symbols.qmd >}}
+
+```{r opts, echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r pkgs}
+library(tidyverse)
+theme_set(theme_bw())
+library(latex2exp)
+```
+
 ```{js favicon-loader}
 //  <link rel="icon" type="image/x-icon" href="pics/favicon.png">
 
@@ -23,103 +37,759 @@ document.head.appendChild(link);
 link.href = 'pics/favicon.png';
 ```
 
-- Пункт плана
-- Пункт плана
-- Пункт плана
+- Смысл оценивания параметров
+- Точечные оценки
+- Свойства точечных оценок
+- Логика тестирования гипотез
+- Ошибки I и II рода
+- Проблема множественных сравнений
 
-## Текст
+# L6.1 // Оценивание параметров
 
-Quarto enables you to weave together content and executable code into a finished presentation. To learn more about Quarto presentations see <https://quarto.org/docs/presentations/>.
+## Сложная ситуация
 
-# Раздел
+* генеральная совокупность 
+* признаки
+* показатели
+* параметры
 
-## Списки
+**Параметр** ($\theta$) --- относительно постоянная [от одной совокупности к другой] величина, харакретизующая генеральную совокупность по некоторому показателю.
 
-When you click the **Render** button a document will be generated that includes:
+* **величина параметра, который мы изучаем, неизвестна**
 
--   Content authored with markdown
--   Output from executable code
+* *выборочная совокупность (выборка)*
+* **выборочная характеристика, или оценка** ($\hat \theta$)
 
-## Код
 
-When you click the `Render` button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:
+## Основные характеристики статистических данных
 
-```{r, echo=TRUE}
-1 + 1
+**Неопределённость** --- мы не знаем, что именно мы получим в результате наших измерений для конкретной выборки
+
+**Вариативность** --- наши данные будут различатся от выборки к выборке и от респондента к респонденту
+
+
+## Итог
+
+* нам не доступны *истинные* значения параметров
+* вынуждены использовать *оценки* этих параметров
+
+* Как нам получить эти оценки?
+* Какими свойствами они должны обладать, чтобы хорошо отражать параметры генеральной совокупности?
+
+
+
+## Точечные оценки
+
+* Параметр генеральной совокупности $\theta$
+* *Точечная оценка* $\hat \theta$ функция (случайная величина) от результатов наблюдений:
+
+$$
+\hat \theta = \hat \theta (\vm x), \; \vm x = \pmatrix{ x_1 & x_2 & \dots & x_n}
+$$
+
+
+## IQ
+
+* параметр --- _среднее значение_
+* признак --- интеллект
+* показатель --- коэффициент IQ ($X$)
+* $X \thicksim \mathcal N(100, 225)$
+
+```{r}
+ggplot() +
+  geom_function(fun = dnorm, args = list(mean = 100, sd = 15)) +
+  geom_vline(xintercept = 100,
+             linetype = "dashed") +
+  xlim(30, 170) +
+  labs(x = "IQ", y = "Density")
 ```
 
 
-## Формулы
+## Извлекаем выборки
 
-$$
-\mathbb{E}(X)=\frac{1}{n} \sum_{i=1}^n x_i
-$$
+* $n = 50$
+* *оценки среднего (выборочные средние)* $\hat \mu$
 
-$$
-n \in \mathbb{N} \\
-x \thicksim \mathcal{N}(0, 1)
-$$
-
-
-## Колонки
-
-:::: {.columns}
-
-::: {.column width="60%"}
-Текст левой колонки
-:::
-
-::: {.column width="40%"}
-Текст правой колонки
-:::
-
-::::
-
-
-## Колонки с картинкой справа
-
-:::: {.columns}
-
-::: {.column width="60%"}
-Текст левой колонки
-:::
-
-::: {.column width="40%"}
-![](pics/test-pic.png)
-:::
-
-::::
-
-
-## Колонки с картинкой слева
-
-:::: {.columns}
-
-::: {.column width="60%"}
-![](pics/test-pic.png)
-:::
-
-::: {.column width="40%"}
-Текст
-:::
-
-::::
-
-
-## График
-
-```{r plot}
-plot(sample(1:100, 30))
+```{r}
+matrix(rnorm(50 * 12, 100, 15), ncol = 12) %>% 
+  as_tibble() %>% 
+  pivot_longer(cols = everything()) %>% 
+  mutate(name = str_replace(name, "V", "sample ") %>% 
+           factor(ordered = TRUE, levels = paste("sample", 1:12))) -> iq_sim
+iq_sim %>% 
+  ggplot(aes(value)) +
+  geom_histogram(binwidth = 3, fill = 'gray50') +
+  geom_vline(data = iq_sim %>% 
+               summarise(mean = mean(value),
+                         .by = name),
+             aes(xintercept = mean)) +
+  facet_wrap(~ name, ncol = 4, scales = "free_x") +
+  labs(x = 'IQ',
+       y = 'Count')
 ```
+
+
+## Метод моментов
+
+В методе моментов есть три этапа:
+
+1) устанавливается связь между оцениваемым параметром и моментом распределения случайной величины
+
+$$
+\quad \theta = \xi(\mu_k),
+$$
+
+где $\mu_k$ --- это момент случайной величины.
+
+2) находятся выборочные моменты
+
+$$
+\hat \theta = \xi(\mu_k^*)
+$$
+
+3) истинный момент заменяется на выборочный --- получается оценка.
+
+
+## Метод моментов для математического ожидания
+
+* среднее значение в случае генеральной совокупности --- математическое ожидание
+
+$$
+\mu = \expect X
+$$
+
+* выборочный аналог математического ожидания --- выборочное среднее [арифметическое]
+
+$$
+\hat \mu = \frac{1}{n} \sum_{i=1}^n x_i = \bar x
+$$
+
+
+## Свойства точечных оценок
+
+* *несмещённость*
+* *состоятельность*
+* *эффективность*
+
+
+## Несмещенность
+
+* когда мы постоянно используем выборочную оценку нашего параметра на выборках некоторого объема, мы _в среднем_ не ошибаемся в оценке параметра.
+
+$$
+\forall n \; \mathbb{E} \hat \theta = \theta
+$$
+где $n$ --- объём выборок.
+
+## Несмещенность выборочного среднего
+
+$$
+\expect (\bar X) \overset{?}{=}\mu
+$$
+
+$$
+X_1, X_2, \dots ,X_n \overset{\text{i.i.d}}{\thicksim} (\mu, \sigma^2)
+$$
+
+$$
+\expect (\bar X) = \expect \Big( \frac{1}{n} (X_1 + X_2 + \dots + X_n) \Big) = \frac{1}{n} \Big( \expect (X_1) + \expect(X_2) + \dots + \expect (X_n) \Big)
+$$
+
+$$
+\expect (\bar X) = \frac{1}{n} \cdot n \cdot \mu = \mu
+$$
+
+
+## Проверка несмещенности дисперсии
+
+$$
+\var(X) = \expect (X^2) - \big( \expect X\big)^2
+$$
+
+$$
+\var(X) = \expect (X - \expect X)^2 = \frac{\sum_{i=1}^n(\mu - x_i)^2}{n}
+$$
+
+Формулы эквивалентны:
+
+$$
+\begin{split}
+\var(x) &= \expect \big( (X - \expect X )^2 \big) = \expect \big( X^2 - 2 X \expect X + (\expect X)^2 \big) = \\
+& = \expect (X^2) - 2 \expect X \expect X + (\expect X)^2 = \expect (X^2) - 2 (\expect X^2) + (\expect X)^2 = \\
+& = \expect (X^2) - (\expect X^2)
+\end{split}
+$$
+
+## Проверка несмещенности дисперсии
+
+$$
+\var(X) = \frac{\sum_{i=1}^n(\mu - x_i)^2}{n}
+$$
+
+$$
+\expect (\hat \sigma^2) = \sigma^2
+$$
+
+$$
+\begin{split}
+\expect (\hat \sigma^2) & = \expect \Big( \expect (X^2) - (\expect X)^2 \Big) = \\
+& = \expect \Big( \overline{X^2} - \bar X^2\Big) = \expect (\overline{X^2}) - \expect(\bar X^2)
+\end{split}
+$$
+
+$\expect (\overline{X^2})$:
+
+$$
+\expect (\overline{X^2}) = \expect \Big( \frac{X_1^2 + X_2^2 + \dots + X_n^2}{n} \Big) = \frac{1}{n} \Big( \expect X_1^2 + \expect X_2^2 + \dots + \expect X_n^2\Big)
+$$
+
+$$
+\expect (\overline{X^2}) = \frac{1}{n} \cdot n \cdot \expect (X_i^2) = \expect (X_i^2)
+$$
+
+$\expect (\bar X^2)$:
+
+$$
+\begin{split}
+\expect (\bar X^2) &= \expect \Big( \frac{X_1 + X_2 + \dots + X_n}{n} \Big)^2 = \\
+& = \frac{1}{n^2} \expect (X_1 + X_2 + \dots + X_n)^2 = \\
+& = \frac{1}{n^2} \expect (X_1^2 + X_2^2 + \dots X_n^2 + 2X_1X_2 + \dots + 2X_{n-1}X_n) = \\
+& = \frac{1}{n^2} \expect \Big( (X_1^2 + X_2^2 + \dots X_n^2) + (2X_1X_2 + \dots + 2X_{n-1}X_n) \Big)
+\end{split}
+$$
+
+$$
+\begin{split}
+\expect (\bar X^2) & = \frac{1}{n^2} \cdot n \cdot \expect (X_i^2) + \frac{1}{n^2} \cdot \frac{n(n-1)}{2} \cdot 2 \expect(X_iX_j) = \\
+& = \frac{1}{n} \expect(X_i^2) + \frac{n-1}{n} (\expect X_i)^2
+\end{split}
+$$
+
+$$
+\begin{split}
+\expect (\hat \sigma^2) & = \expect (\overline{X^2}) - \expect(\bar X^2) = \\
+& = \expect (X_i^2) - \frac{1}{n} \expect (X_i^2) - \frac{n-1}{n} (\expect X_i)^2 = \\
+& = \frac{n}{n} \expect (X_i^2) - \frac{1}{n} \expect (X_i^2) - \frac{n-1}{n} (\expect X_i)^2 = \\
+& = \frac{n-1}{n} \Big ( \expect (X_i^2) - (\expect X_i)^2 \Big) = \\
+& = \frac{n-1}{n} \sigma^2
+\end{split}
+$$
+
+## Оценка дисперсии является смещенной
+
+* математическое ожидание нашей оценки оказывается равно не самому значению интересующего нас параметра, а значению параметра, умноженному на некоторое число $\frac{n-1}{n}$
+* оценка является смещенной
+* для расчета дисперсии на выборке используется _выборочная, или исправленная, дисперсия_
+
+## Исправленная (выборочная) дисперсия
+
+Если оценка дисперсии отличается от значения параметра в $\frac{n-1}{n}$ раз, то надо домножить оценку на $\frac{n}{n-1}$:
+
+$$
+s^2 = \frac{n}{n-1} \cdot \hat \sigma^2 = \frac{n}{n-1} \cdot \frac{1}{n} \sum (x_i - \bar x)^2 = \frac{1}{n-1} \sum (x_i - \bar x)^2
+$$
+
+
+
+## Состоятельность
+
+$$
+\lim_{n \rightarrow \infty} \mathrm{P}(|\hat \theta - \theta| < \varepsilon) = 1, \, \varepsilon > 0
+$$
+
+* при неограниченном росте мощности выборки наша оценка стремится к истинному значению параметра
+* с ростом выборки значение нашей оценки все реже выпадает из некоторого достаточно узкого интервала $(\theta - \varepsilon, \theta + \varepsilon)$
+
+## Состоятельность графически
+
+```{r}
+dice <- list()
+for (i in 1:1000) {
+  dice[[i]] <- sample(1:6, i, replace = TRUE)
+}
+names(dice) = 1:1000
+dice %>% 
+  map(mean) %>% 
+  as_tibble() %>% 
+  pivot_longer(cols = everything()) %>% 
+  mutate(name = as.numeric(name)) %>% 
+  ggplot(aes(name, value)) +
+  geom_line() +
+  geom_hline(yintercept = 3.5,
+             size = 1, color = "blue") +
+  geom_hline(yintercept = 3.7,
+             linetype = "dashed", color = "blue") +
+  geom_hline(yintercept = 3.3,
+             linetype = "dashed", color = "blue") +
+  annotate(geom = "text",
+           x = 1010, y = 3.6,
+           label = TeX("$\\theta$"),
+           color = "blue") +
+  labs(x = "n", y = TeX("$\\hat{\\theta}$"))
+```
+
+## Несостоятельная оценка
+
+```{r}
+tibble(name = 1:1000,
+         value = rnorm(1000, 3.5, 3)) %>% 
+  ggplot(aes(name, value)) +
+  geom_line() +
+  geom_hline(yintercept = 3.5,
+             size = 1, color = "blue") +
+  geom_hline(yintercept = 5,
+             linetype = "dashed", color = "blue") +
+  geom_hline(yintercept = 2,
+             linetype = "dashed", color = "blue") +
+   annotate(geom = "text",
+           x = 1010, y = 4,
+           label = TeX("$\\theta$"),
+           color = "blue") +
+  labs(x = "n", y = TeX("$\\hat{\\theta}$"))
+```
+
+
+## Эффективность
+
+
+* оценка параметра --- это случайная величина
+* у неё есть *дисперсия*
+* оценка **эффективна**, если её дисперсия минимальна
+
+$$
+\sigma^2_{\hat \theta} = \min
+$$
+
+
+## Эффективность графически
+
+```{r}
+ggplot() +
+  geom_function(fun = dnorm, args = list(mean = 0, sd = .5), color = "red3") +
+  geom_function(fun = dnorm, args = list(mean = 0, sd = 2), color = "blue3") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  xlim(-5, 5) +
+  annotate(geom = "text",
+           x = .3, y = 0,
+           label = TeX("\\theta")) +
+  annotate(geom = "text",
+           x = .5, y = .7,
+           label = TeX("$\\hat{\\theta}_{1}$"),
+           color = "red3") +
+  annotate(geom = "text",
+           x = 1.25, y = .2,
+           label = TeX("$\\hat{\\theta}_{2}$"),
+           color = "blue3")
+```
+
+
+
+
+## Интервальные оценки
+
+**Надёжность** точечной оценки:
+
+$$
+\gamma = \prob (\theta_\min < \theta < \theta_\max)
+$$
+
+Такая форма оценки называется **интервальной оценкой параметра**, так как мы указываем *интервал*, в котором находится истинное значение с определённой вероятностью.
+
+
+## Стандартная ошибка
+
+* IQ
+* распределение параметра в генеральной совокупности такое
+
+```{r}
+ggplot() +
+  geom_function(fun = dnorm, args = list(mean = 100, sd = 15)) +
+  geom_vline(xintercept = 100,
+             linetype = "dashed") +
+  xlim(30, 170) +
+  labs(x = "IQ", y = "Density")
+```
+
+## Стандартная ошибка
+
+Вновь извлечем несколько выборок из нашей генеральной совокупности:
+
+```{r}
+matrix(rnorm(50 * 12, 100, 15), ncol = 12) %>% 
+  as_tibble() %>% 
+  pivot_longer(cols = everything()) %>% 
+  mutate(name = str_replace(name, "V", "sample ") %>% 
+           factor(ordered = TRUE, levels = paste("sample", 1:12))) -> iq_sim
+iq_sim %>% 
+  ggplot(aes(value)) +
+  geom_histogram(binwidth = 3, fill = 'gray50') +
+  geom_vline(data = iq_sim %>% 
+               summarise(mean = mean(value),
+                         .by = name),
+             aes(xintercept = mean)) +
+  facet_wrap(~ name, ncol = 4, scales = "free_x") +
+  labs(x = 'IQ',
+       y = 'Count')
+```
+
+
+## Стандартная ошибка
+
+* извлечем 1000 выборок по 100 наблюдений
+* посчитаем на каждой из них среднее
+* построим распределение выборочных средних
+
+```{r}
+set.seed(123)
+matrix(rnorm(100 * 1000, 100, 15), ncol = 1000) %>% 
+  apply(2, mean) %>% 
+  tibble(x = .) -> iq_sim2
+  # pivot_longer(cols = everything()) %>% 
+iq_sim2 %>% 
+  ggplot(aes(x)) +
+  geom_histogram(fill = 'gray50') +
+  geom_vline(aes(xintercept = mean(x))) +
+  labs(x = 'Mean',
+       y = 'Count')
+```
+
+## Распределение выборочных средних
+
+$$
+\mathcal N(\overline{\bar x}, \sigma_{\bar x}^2)
+$$
+
+* _среднее средних_ будет оказываться очень близко с значению нашего параметра
+* cтандартное отклонение распределения выборочных средних называется **стандартной ошибкой среднего (standard error of mean)**:
+
+$$
+\se(\bar x) = \sqrt{\sigma^2_{\overline x}} = \sigma_{\overline x}
+$$
+
+В нашем случае оно будет равно `r round(sd(iq_sim2$x), 2)`.
+
+## Стандартная ошибка как интервальная оценка
+
+$$
+\begin{split}
+0.682 & = \prob (\overline{\bar x}-\sigma_{\overline x} < \mu < \overline{\bar x}+\sigma_{\overline x}) \\
+& = \prob (98.57 < \mu < 101.43)
+\end{split}
+$$
+
+## Центральная предельная теорема
+
+[Визуализация](https://gallery.shinyapps.io/CLT_mean/)
+
+
+## Расчет стандартной ошибки среднего
+
+$$
+\se_X = \frac{\sd_X}{\sqrt{n}} = \frac{\hat \sigma_X}{\sqrt{n}}
+$$
+
+$$
+\var \bar X_i = \var \Big( \frac{1}{n} \sum X_i \Big), \, X_i \overset{\text{i.i.d.}}{\thicksim} (\mu, \sigma^2)
+$$
+
+$$
+\begin{split}
+\var \bar X_i & = \var \Big( \frac{1}{n} \sum X_i \Big) \\
+& = \frac{1}{n^2} \sum \var(X_i) = \frac{1}{n^2} \sum \sigma^2 = \frac{n}{n^2} \sigma^2 = \frac{\sigma^2}{n}
+\end{split}
+$$
+
+$$
+\se_X = \sqrt{ \var \Big( \frac{1}{n} \sum X_i \Big)} = \sqrt{\frac{\sigma^2}{n}} = \frac{\sigma}{\sqrt{n}}
+$$
+
+
+
+## Доверительный интервал
+
+$$
+\mathrm{P}(\theta_\min < \theta < \theta_\max) = \gamma, \; \gamma \rightarrow 1
+$$
+
+$\theta_\min$ и $\theta_\max$ --- границы доверительного интервала, $\gamma$ --- доверительная вероятность (обычно $0.95$).
+
+## Стандартное нормальное распределение
+
+* $z \thicksim \mathcal N(0, 1)$
+* $\prob (z \in [-1.96, 1.96]) = 0.95$
+
+```{r}
+tibble(x = seq(-3.5, 3.5, by = .01),
+       y = dnorm(x)) -> st_norm
+
+st_norm %>% 
+  ggplot(aes(x, y)) +
+  geom_area(data = st_norm %>% filter(x > -1.96 & x <= 1.96),
+            fill = "royalblue", alpha = .5) +
+  geom_line() +
+  geom_vline(xintercept = 0, linetype = "dashed", alpha = .5) +
+  geom_vline(xintercept = c(-1.96, 1.96), linetype = "dotted") +
+  annotate(x = 0, 
+           y = .05, 
+           label = "0.95",
+           geom = "text") +
+  scale_x_continuous(breaks = -3:3) +
+  labs(x = "Value", 
+       y = "Density")
+```
+
+
+## Вычисление доверительного интервала через стандартную ошибку
+
+$$
+\prob \Big( \bar x + z_\min \se_X < \mu < 
+\bar x + z_\max \se_X \Big) = \gamma
+$$
+
+Для 95%-доверительного интервала:
+
+$$
+\prob \Big( \bar x -1.96 \se_X < \mu < 
+\bar x + 1.96 \se_X \Big) = 0.95
+$$
+
+
+
+## Интерпретация доверительного интервала
+
+> Если мы будет бесконечно извлекать новые выборки из генеральной совокупности, рассчитывать на них средние и 95% доверительные интервалы к ним, то генеральное среднее попадёт в границы 95% таких доверительных интервалов.
+
+[Визуализация](https://rpsychologist.com/d3/ci/)
+
+Вероятность, что значение параметра генеральной совокупности попадет в пределы конкретного доверительного, рассчитанного в данном исследовании, оказывается меньше --- около 84.3%.
+
+
+
+
+# L6.2 // Тестирование гипотез
+
+## Вопросы к статистическим методам
+
+- Различаются ли группы между собой?
+- Значимо ли влияние какого-либо фактора? → Различаются ли группы между собой?
+- Хороша ли та модель, которую мы построили? → Отличается ли она от нулевой модели?
+
+
+## Нулевая и альтернативная гипотезы
+
+- **Гипотеза** ($H$) --- это предположение, которое подлежит проверке на основе результатов наблюдений.
+- Гипотезы бывают:
+    - **теоретические** --- про конструкты
+    - **эмпирические** --- про переменные
+    - **статистические** --- про параметры [генеральной совокупности] и данные
+
+## Статистические гипотезы
+
+- **Простая гипотеза** --- $H : \theta = \theta_0$ или $H : \theta_1 = \theta_2$
+- **Сложная гипотеза** --- $H : \theta > \theta_0$ или $H : \theta_1 \neq \theta_2$.
+
+- **Проверяемая (нулевая) гипотеза** --- $H_0$
+- **Альтернативная гипотеза** --- $H_1$
+
+
+## Подходы к тестированию статистических гипотез
+
+### Фреквентистский подход
+
+> Какова вероятность получить _такие_ данные, если допустить, что нулевая гипотеза верна?
+
+
+### Байесовский подход
+
+> Насколько вероятна справедливость нулевой или альтернативной гипотезы при условии, что мы получили такие данные.
+
+
+
+## Возможные результаты проверки гипотез {#stats-testing-results}
+
+|            | $H_0$         | $H_1$          |
+|:--|:-------------:|:--------------:|
+| $\hat H_0$ | ✓             | Ошибка II рода |
+| $\hat H_1$ | Ошибка I рода | ✓              |
+
+- **Ошибка I рода** возникает, когда в генеральной совокупности _искомой закономерности нет_, но мы в силу случайных флуктуаций в данных _её нашли_.
+- **Ошибка II рода** возникает, когда в генеральной совокупности _искомая закономерность есть_, но мы в силу каких-либо причин её _не нашли_.
+
+
+## Контроль ошибок I и II рода
+
+- **Ошибка I рода** --- **уровень значимости** $\alpha$
+- **Ошибка II рода** --- **статистическая мощность** $1-\beta$
+    - размер выборки
+    - размер эффекта
+    
+
+## Результаты тестирования гипотез через вероятности
+
+|            | $H_0$ | $H_1$|
+|:----------:|:---:|:---:|
+| $\hat H_0$ | $\mathrm P (\hat H_0 | H_0)$ | $\mathrm P (\hat H_0 | H_1) = \beta$ |
+| $\hat H_1$ | $\mathrm P (\hat H_1 | H_0) = \alpha$ | $\mathrm P (\hat H_1 | H_1) = 1 - \beta$ |
+
+
+* $\alpha \rightarrow 0$
+
+$$
+\mathrm P (\hat H_1) = \mathrm P (\hat H_1 | H_0) \cdot \mathrm P (H_0) = \alpha \cdot \mathrm P(H_0)
+$$
+
+* $(1-\beta) \rightarrow 1, \, \beta \rightarrow 0$
+
+$$
+\mathrm P (\hat H_0) = \mathrm P (\hat H_0 | H_1) \cdot \mathrm P (H_1) = \beta \cdot \mathrm P (H_1)
+$$
+
+## Связь ошибки первого и второго рода
+
+$$
+\alpha \rightarrow 0 \Rightarrow \beta \rightarrow 1
+$$
+
+
+$$
+\begin{split}
+\beta \cdot \mathrm P (H_1) & = \mathrm P (\hat H_0) = \mathrm P (\hat H_0 | H_0) \cdot \mathrm P (H_0) \Rightarrow \\
+\beta & = \frac{1}{\mathrm P (H_1)} \cdot \mathrm P (H_0) \cdot \mathrm P(\hat H_0 | H_0) \\
+\beta & = \frac{1}{\mathrm P (H_1)} \cdot \big (1 - \mathrm P (H_1 | H_0)\big) = \frac{1}{\mathrm P (H_1)} \cdot \mathrm P (H_0) \cdot (1 - \alpha)
+\end{split}
+$$
+
+
+
+## Асимметрия статистического вывода
+
+**Критерий** --- правило, согласно которому гипотезу либо принимают, либо отклоняют.
+**Статистика** --- величина, позволяющая протестировать гипотезу (непрерывная случайная величина).
+**Критическая область** --- область отклонения гипотезы.
+
+Критическая область может быть односторонней (при $H_1:\theta > \theta_0$ или $H_1: \theta < \theta_0$) и двусторонней (при $H_1:\theta \neq \theta_0$). «Размер» критической области определяется **уровнем значимости**.
+
+
+## Статистический вывод
+
+* Статистический вывод --- заключение о том, получили ли мы подтверждение альтернативной гипотезы
+* По структуре --- *импликация*
+
+> Если значение статистики критерия попало в критическую область, то у нас есть основания отклонить нулевую гипотезу в пользу альтернативной
+
+* Если значение нашей статистики, которое мы рассчитали на выборке, *попало в критическую область*, то мы говорим о том, что *нулевая гипотеза отклоняется*.
+* Если значение нашей статистики, которое мы рассчитали на выборке, *не попало в критическую область*, то мы *не получаем оснований для того, чтобы отклонить нулевую гипотезу*. Однако *мы также не получаем оснований, чтобы её «принять»*.
+
+
+## Агоритм тестирования статистических гипотез {#stats-testing-algorithm}
+
+### Сценарий 1
+
+1. Формулировка гипотезы
+2. Выбор статистического критерия
+3. Выбор уровня значимости $\alpha$
+4. Построение закона распредления статистики критерия при условии, что нулевая гипотеза верна
+5. Определение границ критической области
+6. Расчёт выборочной статистики
+7. Определение, попадает ли наблюдемое значение статистики в критическую область и вынесение решения
+
+### Сценарий 2
+
+1. Формулировка гипотезы
+2. Выбор статистического критерия
+3. Выбор уровня значимости $\alpha$
+4. Построение закона распредлеения статистики критерия при условии, что нулевая гипотеза верна
+5. Расчёт выборочной статистики
+6. Расчёт достигнутого уровня значимости *p-value*
+7. Сопоставление $\alpha$ и *p-value* и вынесение решения
+
+
+
+## Размер эффекта и статистическая мощность
+
+* Ошибка второго рода соответствует ситуации, когда мы _не обнаружили закономерность_ при условии, что _закономерность в генеральной совокупности присутствует_
+* На эту вероятность влияет «размер» той закономерности --- **размер эффекта (effect size)**
+* Мы работаем с вероятностью $1-\beta = \prob (\hat H_1|H_1)$ --- **статистическая мощность (statistical power)**
+
+Статистическая мощность зависит от размера эффекта и объема выборки:
+
+* Чем больше размер эффекта, тем меньшую по объему выборку нам необходимо набрать, чтобы достигнуть требуемой статистической мощности.
+* Чем больше выборка, тем выше статистическая мощность исследования.
+
+[Визуализация](https://rpsychologist.com/d3/nhst/)
+
+
+## Проблема множественных сравнений {#stats-testing-multiple-comparisons}
+
+* $\alpha = 0.05$ в одном сравнении
+* вероятность сделать правильный вывод --- $1 - \alpha$
+* сравнения независимы
+* вероятность сделать правильный вывод в $m$ сравнениях --- $(1 - \alpha)^m$
+
+Вероятность ошибиться хотя бы в одном сравнении:
+
+$$
+\prob^′ = 1 - (1 - \alpha)^m
+$$
+ 
+
+В случае трёх сравнений вероятность ошибиться получается:
+
+$$
+\prob^′ = 1 - (1 - 0.05)^3 \approx 0.143
+$$
+
+
+## Зависимость вероятности ошибки первого рода от количества сравнений
+
+```{r alpha-raise, echo=FALSE}
+ 
+alpha_multiple_comp <- function(n, alpha = .05) {1 - (1 - alpha) ^ n}
+
+tibble(n = 1:10,
+       alpha05 = alpha_multiple_comp(n),
+       alpha001 = alpha_multiple_comp(n, alpha = .001)) |>
+  pivot_longer(cols = -n, names_to = "alpha", values_to = "value") |> 
+  ggplot(aes(x = n, y = value, color = alpha)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = 1:10) +
+  scale_color_discrete(labels = c(alpha05 = "0.05", alpha001 = "0.001")) +
+  labs(x = "Number of comparisons",
+       y = TeX("$$\\alpha$$"),
+       color = "Level of Significance") +
+  theme(legend.position = "bottom")
+```
+
+
+## Корректировка уровня значимости {#stats-testing-correction}
+
+Поправка Бонферрони (Bonferroni):
+
+$$
+\alpha’ = \frac{\alpha}{n},
+$$
+
+где $n$ --- число попарных сравнений.
+
+На практике в силу того, что в статистических пакетах мы работаем с p-value, корректируется именно его значение.
+
+$$
+p < \frac{\alpha}{n} \Rightarrow np < \alpha
+$$
+
 
 ## Итоги
 
-- Пункт итогов
-- Пункт итогов
-- Пункт итогов
+- Оценивание параметров методом моментов
+- Несмещенность, состоятельность и эффективность --- это найс
+- Тестирование гипотез происходит по точному алгоритму
+- Ошибки при тестировании гипотез случаются, и их нужно контролировать
+- Ошибку I рода контролировать проще, чем ошибку II рода
+- Если у нас несколько сравнений, то все становится грустно
 
 
-# L6. Оценивание параметров в практике статистического анализа. Тестирование статистических гипотез {#end}
+# L6 // Оценивание параметров в практике статистического анализа. Тестирование статистических гипотез {#end}
 
 :::: {.quarto-title-authors}
 ::: {.quarto-title-author}
