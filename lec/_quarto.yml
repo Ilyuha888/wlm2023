@@ -51,10 +51,10 @@ book:
     collapse: true
     background: gray-700
 
+bibliography: references.bib
+
 comments:
   hypothesis: true
-
-bibliography: references.bib
 
 format:
   html:

@@ -913,31 +913,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code># A tibble: 6 × 2
      id    IQ
   &lt;int&gt; &lt;dbl&gt;
-1     1   101
-2     2    87
-3     3   102
-4     4   100
-5     5   104
-6     6   107</code></pre>
+1     1   120
+2     2   102
+3     3    99
+4     4   103
+5     5    91
+6     6   116</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(iq)</span></code><button title="Копировать" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 6 × 2
      id    IQ
   &lt;int&gt; &lt;dbl&gt;
-1  9995   126
-2  9996    91
-3  9997   115
-4  9998    99
-5  9999    93
-6 10000   107</code></pre>
+1  9995    93
+2  9996    79
+3  9997    86
+4  9998    80
+5  9999    70
+6 10000   112</code></pre>
 </div>
 </div>
 <p>Так как мы предположили, что это генеральная совокупность, то мы можем посчитать истинное значение параметра <span class="math inline">\(\mu\)</span>. <strong>В реальной жизни мы этого сделать не можем!</strong></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(iq<span class="sc">$</span>IQ)</span></code><button title="Копировать" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 99.8836</code></pre>
+<pre><code>[1] 99.8459</code></pre>
 </div>
 </div>
 <p>Вполне ожидаемое значение<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. Теперь попробуем наизвлекать выборок человек по 50 и посчитать <em>оценки среднего (выборочные средние)</em> <span class="math inline">\(\hat \mu\)</span> на них:</p>
@@ -1231,12 +1231,12 @@ t = \frac{\bar x - \mu}{s}\sqrt{n-1},
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean_cl_normal</span>(iq<span class="sc">$</span>IQ)</span></code><button title="Копировать" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>        y     ymin     ymax
-1 99.8836 99.59179 100.1754</code></pre>
+1 99.8459 99.55336 100.1384</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean_cl_boot</span>(iq<span class="sc">$</span>IQ)</span></code><button title="Копировать" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>        y     ymin     ymax
-1 99.8836 99.57664 100.1841</code></pre>
+1 99.8459 99.54483 100.1385</code></pre>
 </div>
 </div>
 
@@ -1792,10 +1792,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script>
-<script src="https://giscus.app/client.js" data-repo="angelgardt/wlm2023" data-repo-id="R_kgDOJCurXw" data-category="General" data-category-id="DIC_kwDOJCurX84CcFPt" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
-</script>
-<input type="hidden" id="giscus-base-theme" value="light">
-<input type="hidden" id="giscus-alt-theme" value="dark">
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
       <a href="./stats-rand-values.html" class="pagination-link  aria-label=" &lt;span="" величины&lt;="" span&gt;"="">
