@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.545">
+<meta name="generator" content="quarto-1.4.510">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -99,7 +99,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Очистить",
-    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Отмена",
     "search-submit-button-title": "Отправить",
     "search-label": "Search"
@@ -114,33 +113,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 </head>
 
@@ -164,10 +136,6 @@ window.Quarto = {
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
-  <li class="nav-item">
-    <a class="nav-link" href="./../book/index.html"> 
-<span class="menu-text">Книга</span></a>
-  </li>  
   <li class="nav-item">
     <a class="nav-link" href="./../lectures/index.html"> 
 <span class="menu-text">Лекции</span></a>
@@ -628,6 +596,11 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <li>Добавьте к средним доверительные интервалы — так визуализация будет более корректно отображать закономерность.</li>
 </ol>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_summary()`
+Caused by error in `fun.data()`:
+! The package "Hmisc" is required.</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -670,6 +643,11 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <li>Сгруппируйте бриллианты по цвету (<code>color</code>), отобразив эту переменную с помощью цвета на графике.</li>
 </ol>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_summary()`
+Caused by error in `fun.data()`:
+! The package "Hmisc" is required.</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -683,6 +661,11 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <li>Расположите средние и доверительные интервалы рядом друг с другом, не потеряв при этом уже заданные группировки.</li>
 </ol>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_summary()`
+Caused by error in `fun.data()`:
+! The package "Hmisc" is required.</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -694,6 +677,11 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <p>Стало гораздо приятнее. Однако вы видим, что горизонтальные линии, обозначающие границы доверительных интервалов, слишком длинные и касаются друг друга. Надо обеспечить их личным пространством.</p>
 <p>с. Уменьшите ширину горизонтальный линий на границах доверительных интервалов, чтобы они не касались друг друга.</p>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_summary()`
+Caused by error in `fun.data()`:
+! The package "Hmisc" is required.</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -735,6 +723,11 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <li>Измените тему визуализации на черно-белую, чтобы картинка стала более контрастной.</li>
 </ol>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_summary()`
+Caused by error in `fun.data()`:
+! The package "Hmisc" is required.</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -747,6 +740,11 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <li>У нас на графике есть легенда, которая занимает прилично так места справа. Сместите её вниз, чтобы пространство графика использовалось более оптимально.</li>
 </ol>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_summary()`
+Caused by error in `fun.data()`:
+! The package "Hmisc" is required.</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -787,6 +785,11 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <p>В примере ниже использован пакет <code>colorspace</code>, в котором есть уже предустановленные цветовые палитры.</p>
 </div>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_summary()`
+Caused by error in `fun.data()`:
+! The package "Hmisc" is required.</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -823,6 +826,11 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <p>Почти готово! Осталось только подписать оси так, чтобы было понятно, что это такое.</p>
 <p>Задайте русские названия осей и легенды, а также добавьте заголовок, подзаголовок и подпись на график.</p>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_summary()`
+Caused by error in `fun.data()`:
+! The package "Hmisc" is required.</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -1124,6 +1132,11 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <li>Замените данные с <code>diamonds</code> на <code>diam1000</code> и добавьте на график средние с доверительными интервалами. Используйте <code>geom_pointrange()</code>.</li>
 </ol>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_summary()`
+Caused by error in `fun.data()`:
+! The package "Hmisc" is required.</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -1136,6 +1149,11 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <li>Добавьте на график точки самих наблюдений. Чтобы можно было увидеть, какие точки накладываются друг на друга, задайте им непрозрачность 20%, а чтобы средние с доверительными интервалами выделялись, покрасьте их в синий.</li>
 </ol>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_summary()`
+Caused by error in `fun.data()`:
+! The package "Hmisc" is required.</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -1176,10 +1194,10 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <p>Визуализируем корреляции между баллами пунктов по шкале predictability (<code>pr</code>).</p>
 <p>Функция <code>ggcorrplot()</code> обязательным аргументов требует корреляционную матрицу. Построим её с помощью следующего кода:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># загрузим данные</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>taia <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr5/taia_items.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>taia <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">"pr"</span>)) <span class="sc">%&gt;%</span> <span class="fu">cor</span>() <span class="ot">-&gt;</span> cormat</span></code><button title="Копировать" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># загрузим данные</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>taia <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr5/taia_items.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>taia <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">"pr"</span>)) <span class="sc">%&gt;%</span> <span class="fu">cor</span>() <span class="ot">-&gt;</span> cormat</span></code><button title="Копировать" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Полученная матрица <code>cormat</code> и есть необходимая нам корреляционная матрица.</p>
 <p>Визуализируйте взаимосвязи между пунктами шкалы predictability с помощью корреляционный матрицы.</p>
@@ -1375,6 +1393,11 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <p>Возьмите график, получившийся в <a href="#pr5-9">задании 9</a>, и замените дефолтный шрифт на шрифт с засечками Times New Roman.</p>
 </div>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_summary()`
+Caused by error in `fun.data()`:
+! The package "Hmisc" is required.</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -1414,6 +1437,11 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <p>Учеличьте кегль подписей оси <code>y</code> до 12.</p>
 </div>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_summary()`
+Caused by error in `fun.data()`:
+! The package "Hmisc" is required.</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -1453,6 +1481,11 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <p>Поверните подписи оси <code>x</code> на 90 градусов.</p>
 </div>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_summary()`
+Caused by error in `fun.data()`:
+! The package "Hmisc" is required.</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -1617,7 +1650,7 @@ REPLACE ALL pr5 TO pr<n> WITH MATCH CASE
 <p>Совсем скоро мы начнем изучать статистические модели, и будем изучать, насколько они хорошо работают на тех или иных данных. Для этого будем рисовать графики, на которых отображены значения из данных и предсказанные значения модели. Очень много не вполне понятных слов — пока познакомимся с технической стороной вопроса.</p>
 <p>Ниже код, который строит модель линейной регрессии, которая позволяет пресказывать значение цены бриллиант по его весу. Скопируйте код и выполните его. В окружении должен создаться объект <code>fit</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">lm</span>(price <span class="sc">~</span> carat, diamonds)</span></code><button title="Копировать" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">lm</span>(price <span class="sc">~</span> carat, diamonds)</span></code><button title="Копировать" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p><code>fit</code> представляет собой список, в котором есть вектор <code>fitted.values</code>, который содержит значения, предсказанные моделью.</p>
 <p>Постройте диаграмму рассеяния по переменным <code>carat</code> и <code>price</code> и добавьте на неё с помощью линии предсказанные моделью значения.</p>
@@ -2077,6 +2110,27 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       }
     }
     stripColumnClz(note)
+    const typesetMath = (el) => {
+      if (window.MathJax) {
+        // MathJax Typeset
+        window.MathJax.typeset([el]);
+      } else if (window.katex) {
+        // KaTeX Render
+        var mathElements = el.getElementsByClassName("math");
+        var macros = [];
+        for (var i = 0; i < mathElements.length; i++) {
+          var texText = mathElements[i].firstChild;
+          if (mathElements[i].tagName == "SPAN") {
+            window.katex.render(texText.data, mathElements[i], {
+              displayMode: mathElements[i].classList.contains('display'),
+              throwOnError: false,
+              macros: macros,
+              fleqn: false
+            });
+          }
+        }
+      }
+    }
     if (id === null || id.startsWith('sec-')) {
       // Special case sections, only their first couple elements
       const container = document.createElement("div");
@@ -2091,14 +2145,10 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             break;
           }
         }
-        if (window.Quarto?.typesetMath) {
-          window.Quarto.typesetMath(container);
-        }
+        typesetMath(container);
         return container.innerHTML
       } else {
-        if (window.Quarto?.typesetMath) {
-          window.Quarto.typesetMath(note);
-        }
+        typesetMath(note);
         return note.innerHTML;
       }
     } else {
@@ -2107,15 +2157,8 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       if (anchorLink) {
         anchorLink.remove();
       }
-      if (window.Quarto?.typesetMath) {
-        window.Quarto.typesetMath(note);
-      }
-      // TODO in 1.5, we should make sure this works without a callout special case
-      if (note.classList.contains("callout")) {
-        return note.outerHTML;
-      } else {
-        return note.innerHTML;
-      }
+      typesetMath(note);
+      return note.innerHTML;
     }
   }
   for (var i=0; i<xrefs.length; i++) {

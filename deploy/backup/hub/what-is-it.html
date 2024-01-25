@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.545">
+<meta name="generator" content="quarto-1.4.510">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -63,7 +63,6 @@ ul.task-list li input[type="checkbox"] {
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
-    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
     "search-submit-button-title": "Submit",
     "search-label": "Search"
@@ -97,10 +96,6 @@ ul.task-list li input[type="checkbox"] {
   <li class="nav-item">
     <a class="nav-link" href="./../hub/index.html"> 
 <span class="menu-text">Хаб</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="./../book/index.html"> 
-<span class="menu-text">Книга</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="./../lectures/index.html"> 
@@ -161,11 +156,8 @@ ul.task-list li input[type="checkbox"] {
   </div>
 </li>
         <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./how-to-use.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Как этим пользоваться?</span></a>
-  </div>
-</li>
+ <span class="menu-text">how-to-use.qmd</span>
+  </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./how-to-support.html" class="sidebar-item-text sidebar-link">
@@ -216,10 +208,11 @@ ul.task-list li input[type="checkbox"] {
 <section id="кто-это-сделал" class="level2">
 <h2 class="anchored" data-anchor-id="кто-это-сделал">Кто это сделал?</h2>
 <p>Идея и методическая разработка курса принадлежит <a href="https://angelgardt.github.io">Антону Ангельгардту</a>.</p>
-<p>В разработке и проведении участвовали Илья Нартов, Владислав Поздеев, Ник Клименков, Екатерина Мартынова и Анастасия Шишунова, за что им огромное спасибо!</p>
+<p>В разработке и проведении участвовали Илья Нартов, Владислав Поздеев, Ник Клименков, Екатерина Мартынова и Анастасия Шишунова.</p>
 <p>Программу курса рецензировала Алмара Кулиева.</p>
 <p>Экспертами курса были Елена Рыбина и Артур Аммалайнен.</p>
-<p>И всё это было бы не возможно без незримого, но крайне важного участия многих представителей научного сообщества, которые когда-то заинтересовали, поддержали, поделились идеями и знаниями и просто были рядом. Всем им — Марии Чумаковой, Елене Горбуновой, Евгению Осину, Ивану Позднякову, Гарику Морозу, Денису Федерякину, Наталье Тюриной и многим другим — огромное спасибо!</p>
+<p>И всё это было бы не возможно без незримого, но крайне важного участия многих представителей научного сообщества, которые когда-то заинтересовали, поддержали, поделились идеями и знаниями и просто были рядом. Всем им — Марии Чумаковой, Елене Горбуновой, Евгению Осину, Ивану Позднякову, Гарику Морозу, Денису Федерякину, Наталье Тюриной и многим-многим другим.</p>
+<p>Всем так или иначе прикоснувшимся к курсу огромное спасибо!</p>
 
 
 </section>
@@ -497,6 +490,27 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       }
     }
     stripColumnClz(note)
+    const typesetMath = (el) => {
+      if (window.MathJax) {
+        // MathJax Typeset
+        window.MathJax.typeset([el]);
+      } else if (window.katex) {
+        // KaTeX Render
+        var mathElements = el.getElementsByClassName("math");
+        var macros = [];
+        for (var i = 0; i < mathElements.length; i++) {
+          var texText = mathElements[i].firstChild;
+          if (mathElements[i].tagName == "SPAN") {
+            window.katex.render(texText.data, mathElements[i], {
+              displayMode: mathElements[i].classList.contains('display'),
+              throwOnError: false,
+              macros: macros,
+              fleqn: false
+            });
+          }
+        }
+      }
+    }
     if (id === null || id.startsWith('sec-')) {
       // Special case sections, only their first couple elements
       const container = document.createElement("div");
@@ -511,14 +525,10 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             break;
           }
         }
-        if (window.Quarto?.typesetMath) {
-          window.Quarto.typesetMath(container);
-        }
+        typesetMath(container);
         return container.innerHTML
       } else {
-        if (window.Quarto?.typesetMath) {
-          window.Quarto.typesetMath(note);
-        }
+        typesetMath(note);
         return note.innerHTML;
       }
     } else {
@@ -527,15 +537,8 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       if (anchorLink) {
         anchorLink.remove();
       }
-      if (window.Quarto?.typesetMath) {
-        window.Quarto.typesetMath(note);
-      }
-      // TODO in 1.5, we should make sure this works without a callout special case
-      if (note.classList.contains("callout")) {
-        return note.outerHTML;
-      } else {
-        return note.innerHTML;
-      }
+      typesetMath(note);
+      return note.innerHTML;
     }
   }
   for (var i=0; i<xrefs.length; i++) {
