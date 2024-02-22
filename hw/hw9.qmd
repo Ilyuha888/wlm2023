@@ -5,6 +5,13 @@
 REPLACE ALL hw9 TO hw<n> WITH MATCH CASE
 -->
 ```
+
+```{r opts, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, message = FALSE, warning = FALSE)
+```
+
+{{< include ../other/_symbols.qmd >}}
+
 ## Основные задания {#hw9_main}
 
 ### #1
@@ -12,12 +19,21 @@ REPLACE ALL hw9 TO hw<n> WITH MATCH CASE
 <img id="hw9-1-level" class="level"/>
 
 ::: {#hw9-1-task .task}
-Текст задания `переменная`.
+Сегодня в нашем распоряжении [данные о продаже домов](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/hw9/house_price.csv). В данных достаточно много переменных, кодбук можно найти [здесь](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/hw9/houses_description.txt).
+
+Загрузите данные и сохраните их в объект `houses`. Изучите их структуру. Проверьте наличие пропущенных значений в столбцах.
 :::
+
+```{r}
+library(tidyverse)
+houses <- read_csv("https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/hw9/house_price.csv")
+str(houses)
+houses %>% sapply(is.na) %>% apply(2, sum)
+```
 
 ::: {#hw9-1-autocheck .autocheck}
 ::: {#hw9-1-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ответа введите количество пропущенных значений в переменной `Alley`.  Проверка игнорирует все пробелы.
 :::
 
 <input class="autocheck-input" type="text" id="hw9-1" placeholder="Введите ответ…">
@@ -28,7 +44,7 @@ REPLACE ALL hw9 TO hw<n> WITH MATCH CASE
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw9-1-hints">
 
 <summary>Подсказки</summary>
@@ -54,19 +70,29 @@ REPLACE ALL hw9 TO hw<n> WITH MATCH CASE
 </details>
 :::
 
-### #2
+### #2 {#hw9-2-title}
 
 <img id="hw9-2-level" class="level"/>
 
 ::: {#hw9-2-task .task}
-Текст задания.
+В данных есть переменная `SalePrice` --- цена участка. Поизучаем, какие характеристики участка оказывают влияние[^influence] на его цену.
 
-$$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
+[^influence]: Будем говорить здесь о влиянии, исходя из простого здравосмысленного соображения: кажется, что сначала существует участок со своими характеристиками, а затем, когда владельцы решают его продать, они выставляют определенную цену.
+
+В данные также есть переменная `LotArea` --- площадь участка. Кажется, разумно предположить, что площадь участка влияет на его стоимость. Проверим данную гипотезу.
+
+a. Постройте регрессионную модель, в которой целевой переменной будет цена участка, а предиктором --- его площадь.
+b. Проинтерпретируйте результаты моделирования.
 :::
+
+```{r}
+model1 <- lm(SalePrice ~ LotArea, houses)
+summary(model1)
+```
 
 ::: {#hw9-2-autocheck .autocheck}
 ::: {#hw9-2-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ответа введите коэффициент детерминации (`Multiple R-squared`) построенной модели. Значение округлите до сотых. В качестве десятичного разделителя используйте точку. Проверка игнорирует все пробелы.
 :::
 
 <input class="autocheck-input" type="text" id="hw9-2" placeholder="Введите ответ…">
@@ -84,19 +110,30 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 <details class="hint">
 
-<summary>Как делать задание?</summary>
+<summary>Как построить модель?</summary>
+
+* Для построение модели линейной регрессии используйте функцию `lm()`
+* Модель задается первым аргументом в формульном виде `y ~ x`
+* Вторым аргументом функции необходимо передать имеющиеся данные
+* Сохраните модель в объект (например, `model1`).
 
 </details>
 
 <details class="hint">
 
-<summary>Что надо сделать?</summary>
+<summary>Как проинтерпретировать результаты?</summary>
+
+* Вывести статистики модели можно с помощью функции `summary()`, в которую необходимо передать объект, содержащий регрессионную модель.
+* Интерпретируются прежде всего следующие показатели: F-статистика (и её p-value), коэффициент детерминации и t-статистики (и их p-value).
 
 </details>
 
 <details class="hint">
 
 <summary>Ответ неверный</summary>
+
+* Проверьте, что значение округлено до сотых.
+* Проверьте, что в качестве десятичного разделителя используется точка.
 
 </details>
 
@@ -108,12 +145,21 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw9-3-level" class="level"/>
 
 ::: {#hw9-3-task .task}
-Текст задания.
+a. Проведите графическую диагностику модели. Дайте интерпретацию полученных результатов.
+b. Визуализируйте модель.
 :::
 
+```{r}
+plot(model1)
+
+houses %>% 
+  ggplot(aes(LotArea, SalePrice)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
 ::: {#hw9-3-autocheck .autocheck}
 ::: {#hw9-3-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ответа введите количество влиятельных наблюдений, обнаруженых в ходе диагностики. Если влиятельных наблюдений нет, введите 0. Проверка игнорирует все пробелы.
 :::
 
 <input class="autocheck-input" type="text" id="hw9-3" placeholder="Введите ответ…">
@@ -131,36 +177,43 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 <details class="hint">
 
-<summary>Как делать задание?</summary>
+<summary>Как провести диагностику?</summary>
+
+* Для этого необходимо построить диагностически графики с помощью функции `plot()`.
+* Необходимо проверить выполнение допущений о распределении остатков модели, их связи с предсказанными значениями целевой переменной и наличие влиятельных наблюдений.
 
 </details>
 
 <details class="hint">
 
-<summary>Что надо сделать?</summary>
+<summary>Как визуализировать модель?</summary>
 
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
+Для визуализации необходимо построить график, отображающий линейную связь между переменными модели.
 
 </details>
 
 </details>
 :::
 
-### #4
+### #4 {#hw9-4-title}
 
 <img id="hw9-4-level" class="level"/>
 
 ::: {#hw9-4-task .task}
-Текст задания.
+В данных есть интересная переменная `SalesCondition` --- условия продажи участка. Выдвинем следующую гипотезу: в случае стандартных условий продажи (`Normal`) и продажи частично достроенного дома (`Partial`) цена будет выше, чем в случае нестандартной продажи (`Abnorml`).
+
+Отберите необходимые наблюдения для проверки данной гипотезы.
 :::
+
+```{r}
+houses %>% 
+  filter(SaleCondition == "Normal" | SaleCondition == "Partial" | SaleCondition == "Abnorml") -> houses_cond
+nrow(houses_cond)
+```
 
 ::: {#hw9-4-autocheck .autocheck}
 ::: {#hw9-4-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ответа введите количество строк в получившемся датасете.
 :::
 
 <input class="autocheck-input" type="text" id="hw9-4" placeholder="Введите ответ…">
@@ -171,7 +224,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw9-4-hints">
 
 <summary>Подсказки</summary>
@@ -197,17 +250,23 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #5
+### #5 {#hw9-5-title}
 
 <img id="hw9-5-level" class="level"/>
 
 ::: {#hw9-5-task .task}
-Текст задания.
+a. Добавьте в имеющуюся модель еще один предиктор `SaleCondition` для проверки заявленной выше гипотезы. Постройте модель на отобранных в предыдущем задании данных.
+b. Проинтерпретируйте результаты моделирования.
 :::
+
+```{r}
+model2 <- lm(SalePrice ~ LotArea + SaleCondition, houses_cond)
+summary(model2)
+```
 
 ::: {#hw9-5-autocheck .autocheck}
 ::: {#hw9-5-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ответа введите коэффициент детерминации (`Multiple R-squared`) построенной модели. Значение округлите до сотых. В качестве десятичного разделителя используйте точку. Проверка игнорирует все пробелы.
 :::
 
 <input class="autocheck-input" type="text" id="hw9-5" placeholder="Введите ответ…">
@@ -225,19 +284,31 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 <details class="hint">
 
-<summary>Как делать задание?</summary>
+<summary>Как построить модель?</summary>
+
+* Для построение модели линейной регрессии используйте всё ту же функцию `lm()`
+* Модель задается первым аргументом в формульном виде `y ~ x1 + x2`
+* Вторым аргументом функции необходимо передать имеющиеся данные
+* Сохраните модель в объект (например, `model2`).
 
 </details>
 
 <details class="hint">
 
-<summary>Что надо сделать?</summary>
+<summary>Как проинтерпретировать результаты?</summary>
+
+* Вывести статистики модели можно с помощью функции `summary()`, в которую необходимо передать объект, содержащий регрессионную модель.
+* Интерпретируются прежде всего следующие показатели: F-статистика (и её p-value), коэффициент детерминации и t-статистики (и их p-value).
+* Обратите внимание на смысл коэффицинтов при переменных `SaleConditionNormal` и `SaleConditionPartial`.
 
 </details>
 
 <details class="hint">
 
 <summary>Ответ неверный</summary>
+
+* Проверьте, что значение округлено до сотых.
+* Проверьте, что в качестве десятичного разделителя используется точка.
 
 </details>
 
@@ -249,10 +320,21 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw9-6-level" class="level"/>
 
 ::: {#hw9-6-task .task}
-Текст задания.
+a. Проведите графическую диагностику модели. Дайте интерпретацию полученных результатов.
+b. Сравните по результатам диагностики две построенные модели.
 :::
 
-::: {#hw9-6-autocheck .autocheck}
+
+```{r}
+plot(model2)
+
+houses %>% 
+  ggplot(aes(LotArea, SalePrice)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+::: {#hw9-6-autocheck .autocheck hidden="true"}
 ::: {#hw9-6-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -265,7 +347,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw9-6-hints">
 
 <summary>Подсказки</summary>
@@ -296,12 +378,21 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw9-7-level" class="level"/>
 
 ::: {#hw9-7-task .task}
-Текст задания.
+В данных есть еще один количественные предиктор, которые потенциально может влиять на целевую переменную --- это `LotFrontage`, длина стороны участка, которая соединена с улицей города. Выдвинем предположение, что и площадь участка `LotArea`, и уличная сторона `LotFrontage` влияют на цену участка `SalePrice`.
+
+a. Постройте модель, позволяющую проверить данную гипотезу.
+b. Проинтерпретируйте результаты моделирования.
+
 :::
+
+```{r}
+model3 <- lm(SalePrice ~ LotArea + LotFrontage, houses)
+summary(model3)
+```
 
 ::: {#hw9-7-autocheck .autocheck}
 ::: {#hw9-7-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ответа введите значение F-статистики модели (`F-statistic`). Значение округлите до целого. Проверка игнорирует все пробелы.
 :::
 
 <input class="autocheck-input" type="text" id="hw9-7" placeholder="Введите ответ…">
@@ -319,19 +410,31 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 <details class="hint">
 
-<summary>Как делать задание?</summary>
+<summary>Как построить модель?</summary>
+
+* Для построение модели линейной регрессии используйте всё ту же функцию `lm()`
+* Согласно гипотезе, нас интересует модель без взаимодействия.
+* Модель задается первым аргументом в формульном виде `y ~ x1 + x2`
+* Вторым аргументом функции необходимо передать имеющиеся данные
+* Сохраните модель в объект (например, `model3`).
 
 </details>
 
 <details class="hint">
 
-<summary>Что надо сделать?</summary>
+<summary>Как проинтерпретировать результаты?</summary>
+
+* Вывести статистики модели можно с помощью функции `summary()`, в которую необходимо передать объект, содержащий регрессионную модель.
+* Интерпретируются прежде всего следующие показатели: F-статистика (и её p-value), коэффициент детерминации и t-статистики (и их p-value).
+* Обратите внимание на смысл коэффицинтов при количественных предикторах.
 
 </details>
 
 <details class="hint">
 
 <summary>Ответ неверный</summary>
+
+Проверьте, что значение округлено до целого
 
 </details>
 
@@ -343,12 +446,20 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw9-8-level" class="level"/>
 
 ::: {#hw9-8-task .task}
-Текст задания.
+
+В последнюю построенную модель включены два количественных предиктора. Мы не проводили подробный разведочный анализ данных, поэтому не знаем, была ли опасность мультиколлинеарности.
+
+Проверьте, есть ли в модели с двумя количественными предикторами проблема мультиколлинеарности.
+
 :::
+
+```{r}
+car::vif(model3)
+```
 
 ::: {#hw9-8-autocheck .autocheck}
 ::: {#hw9-8-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ответа введите `да`, если проблема мультиколлинеарности есть, и `нет`, если такой проблемы нет.
 :::
 
 <input class="autocheck-input" type="text" id="hw9-8" placeholder="Введите ответ…">
@@ -364,38 +475,35 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 <summary>Подсказки</summary>
 
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
+* Для проверки наличия мультиколлинеарности необходимо рассчитать коэффициенты вздутия дисперсии (variance inflation factor, VIF) для предикторов модели.
+* Для этого можно воспользоваться функцией `vif()` из пакета `car`.
 
 </details>
 :::
 
-### #9
+### #9 {#hw9-9-title}
 
 <img id="hw9-9-level" class="level"/>
 
 ::: {#hw9-9-task .task}
-Текст задания.
+Давайте совместим построенные модели. У нас есть следующие предикторы: `LotArea`, `LotFrontage` и `SaleCondition` (изучаем три условия --- `Normal`, `Partial` и `Abnorml`). Нам интересно изучить, как эти предикторы влияют на цену участка `SalePrice`.
+
+В качестве предикторов в модель должны быть включены основные эффекты предикторов `LotArea`, `LotFrontage` и `SaleCondition`, а также взаимодействие между `LotArea` и `SaleCondition`.
+
+a. Постройте модель на данных, отобранных в [задании 4](#hw9-4-title).
+b. Проинтерпретируйте результаты моделирования.
+с. Проведите графическую диагностику модели.
 :::
+
+```{r}
+model4 <- lm(SalePrice ~ LotFrontage + LotArea * SaleCondition, houses_cond)
+summary(model4)
+plot(model4)
+```
 
 ::: {#hw9-9-autocheck .autocheck}
 ::: {#hw9-9-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ответа введите значение F-статистики модели (`F-statistic`). Значение округлите до целого. Проверка игнорирует все пробелы.
 :::
 
 <input class="autocheck-input" type="text" id="hw9-9" placeholder="Введите ответ…">
@@ -437,12 +545,20 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw9-10-level" class="level"/>
 
 ::: {#hw9-10-task .task}
-Текст задания.
+a. По результатам, полученным в [задании 9](#hw9-9-title), предположите, можно ли исключить из последней построенной модели взаимодействие предикторов.
+b. «Обновите» модель из задания 9, исключив из неё взаимодействие предикторов.
+с. Сравните модель со взаимодействием и модель без взаимодействия с помощью статистического теста. Проинтерпретируйте результаты.
+
 :::
+
+```{r}
+model4.1 <- update(model4, . ~ . -LotArea : SaleCondition)
+anova(model4, model4.1)
+```
 
 ::: {#hw9-10-autocheck .autocheck}
 ::: {#hw9-10-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ответа введите значение F-статистики модели (`F-statistic`). Значение округлите до целого. Проверка игнорирует все пробелы.
 :::
 
 <input class="autocheck-input" type="text" id="hw9-10" placeholder="Введите ответ…">
@@ -486,10 +602,28 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw9-11-level" class="level"/>
 
 ::: {#hw9-11-task .task}
-Текст задания.
+В [задании 2]({#hw9-2-title) мы построили модель, в которой обнаружелись влиятельные наблюдения. Давайте посмотрим, что будет, если мы исключим эти наблюдения из выборки.
+
+a. Исключите влиятельные наблюдения из данных, воспользовавшись номером строки, которые представлен на диагностическом графике.
+b. Постройте регрессионную модель, аналогичную той, что была в задании 2, но на новых данных (без влиятельных наблюдений).
+c. Сравните две модели. Используйте коэффициент детерминации и среднюю квадратичную ошибку.
+
 :::
 
-::: {#hw9-11-autocheck .autocheck}
+```{r}
+# 250, 336, 314
+
+houses %>% 
+  slice(-c(250, 336, 314)) -> houses_noinfluential
+
+model1.1 <- lm(SalePrice ~ LotArea, houses_noinfluential)
+summary(model1.1)
+plot(model1.1)
+Metrics::rmse(houses$SalePrice, model1$fitted.values)
+Metrics::rmse(houses_noinfluential$SalePrice, model1.1$fitted.values)
+```
+
+::: {#hw9-11-autocheck .autocheck hidden="true"}
 ::: {#hw9-11-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -502,7 +636,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw9-11-hints">
 
 <summary>Подсказки</summary>
@@ -533,10 +667,23 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw9-12-level" class="level"/>
 
 ::: {#hw9-12-task .task}
-Текст задания.
+В [задании 5](#hw9-5-title) была построена модель с количественным и категориальным предиктором без взаимодействия. Неплохо было бы её визуализировать, однако если мы воспользуемся стандартной функцией `geom_smooth(method = "lm")` из `ggplot2`, то получим визуализацию модели со взаимодействием. Для того, чтобы получить нужную визуализацию, надо немного поколдовать.
+
+а. Добавьте в датасет, на котором была построена модель из задания 5, колонку с предсказанными моделью значениями
+b. Визуализируйте связь между переменными модели с помошью диаграммы рассеяния
+с. Добавьте визуализацию предсказанных моделью значений с помощью линии
+
 :::
 
-::: {#hw9-12-autocheck .autocheck}
+```{r}
+houses_cond %>% 
+  mutate(fitted = model2$fitted.values) %>% 
+  ggplot(aes(LotArea, SalePrice, color = SaleCondition)) +
+  geom_point() +
+  geom_line(aes(y = fitted))
+```
+
+::: {#hw9-12-autocheck .autocheck hidden="true"}
 ::: {#hw9-12-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -549,7 +696,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw9-12-hints">
 
 <summary>Подсказки</summary>
@@ -575,15 +722,18 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #3
+### #3 {#hw9-13-title}
 
 <img id="hw9-13-level" class="level"/>
 
 ::: {#hw9-13-task .task}
-Текст задания.
+Мы построили несколько моделей в заданиях выше. Давайте выберем ту, которая наиболее хорошо описывает наши данные.
+
+a. Выберите критерий (критерии) для сравнения моделей --- это может быть как статистический тест, так и какая-либо из метрик качества модели (её предсказательной силы).
+b. Используя выбранный критерий (критерии), из построенных моделей выберите ту, которая лучше всего описывает данные.
 :::
 
-::: {#hw9-13-autocheck .autocheck}
+::: {#hw9-13-autocheck .autocheck hidden="true"}
 ::: {#hw9-13-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -596,7 +746,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw9-13-hints">
 
 <summary>Подсказки</summary>
@@ -627,10 +777,10 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw9-14-level" class="level"/>
 
 ::: {#hw9-14-task .task}
-Текст задания.
+Для модели, выбранной [в предыдущем задании](#hw9-13-title), экспортируйте результаты моделирования: текстовое описание результатов и таблицу со статистиками для предикторов модели.
 :::
 
-::: {#hw9-14-autocheck .autocheck}
+::: {#hw9-14-autocheck .autocheck hidden="true"}
 ::: {#hw9-14-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -643,7 +793,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw9-14-hints">
 
 <summary>Подсказки</summary>
@@ -674,10 +824,45 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw9-15-level" class="level"/>
 
 ::: {#hw9-15-task .task}
-Текст задания.
+Мы знаем формулу для матричного вычисления коэффициент регрессионной модели:
+
+$$
+\vm b = ( \vm X^\T \vm X)^{-1} \vm X^\T \vm y
+$$
+
+Давайте проверим, что результаты вычисления по этой формуле совпадают с результатами работы функции `lm()`. Рассмотрим случай только с количественными предикторами.
+
+a. Напишите функцию `reg_coef()`, которая вычисляет коэффициенты модели множественной линейной регрессии с количественными предкиторами без взаимодействия. Функция должна:
+
+* принимать на вход:
+    * датасет, на котором будет строится модель (например, в аргумент `data`)
+    * название целевой переменной (например, в аргумент `y`)
+    * вектор названия количественных предикторов (например, в аргумент `X`)
+* вычислять вектор коэффициентов в соответствии с формулой
+* возвращать вектор коэффциентов
+
+Учтите, что:
+
+* интерсепт также должен быть включен в возвращаемый вектор
+* данные могут содержать пропущенные значения
+
+b. Проверьте, что команды `reg_coef(data = houses, y = "SalePrice", X = c("LotArea", "LotFrontage"))` и `lm(SalePrice ~ LotArea + LotFrontage, houses)` дают одинаковый результат.
 :::
 
-::: {#hw9-15-autocheck .autocheck}
+```{r}
+reg_coef <- function(data, y, X) {
+  data %>% select(all_of(X), all_of(y)) %>% drop_na() -> data_
+  data_ %>% pull(y) -> y_
+  data_ %>% select(all_of(X)) %>% as.matrix() %>% cbind(matrix(1, nrow = nrow(data_)), .) -> X_
+  return(solve(t(X_) %*% X_) %*% t(X_) %*% y_)
+}
+reg_coef(data = houses,
+         y = "SalePrice",
+         X = c("LotArea", "LotFrontage"))
+lm(SalePrice ~ LotArea + LotFrontage, houses)
+```
+
+::: {#hw9-15-autocheck .autocheck hidden="true"}
 ::: {#hw9-15-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -690,7 +875,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw9-15-hints">
 
 <summary>Подсказки</summary>
