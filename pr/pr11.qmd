@@ -5,6 +5,55 @@
 REPLACE ALL pr11 TO pr<n> WITH MATCH CASE
 -->
 ```
+
+```{r opts, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r pkgs, eval=TRUE}
+library(tidyverse)
+theme_set(theme_bw())
+theme_update(legend.position = "bottom")
+library(ez)
+```
+
+::: {.callout-note}
+## Основной датасет
+
+Сегодня мы вновь обратимся к данным [share](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr11/share.csv) --- это тот самый поведенческий эксперимент, с которым мы работали на четвертой практике и в пятой домашке.
+
+> В исследовании изучался зрительный поиск иконок различных платформ смартфонов. Испытуемым надо было искать иконки поделиться (share) iOS и Android среди дисктракторов --- других иконок, которые для обеих платформ отрисованы одинаково. Целевой стимул (**внутригрупповая переменная**) мог быть один --- два условия: иконка iOS (Outgoing Tray, `tray`) и иконка Android (Three Dots, `dots`) --- или их могло быть два --- и тот, и другой. Дополнительно варьировалось количество стимулов в пробе (**внутригрупповая переменная**) --- 8, 12, 16. Фиксировалось время поиска целевого стимула (время реакции) --- от начала пробы до клика испытуемого --- а также координаты клика для вычисления точности поиска. Дополнительно были записаны данные об используемой платформе смартфона (**межгрупповая переменная**) --- iOS или Android.
+
+**Переменные в датасете:**
+
+* `id` --- идентификатор испытуемого
+* `trialtype` --- тип пробы (`dots` / `tray` / `both`)
+* `setsize` --- количество стимулов в пробе (`8` / `12` / `16`)
+* `platform` --- платформа, которой пользуется испытуемый (`ios` / `android`)
+* `time1` --- время первого клика, с
+* `time2` --- время второго клика, с
+* `correct1` --- является ли первый клик верным
+* `correct2` --- является ли второй клик верным
+
+Мы будем изучать время реакции на первом клике, так как это наиболее соответствует гипотезам дисперсионного анализа.
+
+:::
+
+:::{.callout-note}
+## Пакеты
+
+Сегодня нам понадобятся пакеты `car` и `ez`. Проверьте, какие из них установлены на вашем компьютере, если какие-либо отсутствуют, установите их.
+
+Можно совместить проверку и установку c помощью следующего кода:
+
+```{r, echo=TRUE}
+pkgs <- c("car", "ez")
+install.packages(pkgs[!(pkgs %in% installed.packages())])
+```
+
+:::
+
+
 ## Основные задания {#pr11_main}
 
 ### #1
@@ -12,9 +61,24 @@ REPLACE ALL pr11 TO pr<n> WITH MATCH CASE
 <img id="pr11-1-level" class="level"/>
 
 ::: {#pr11-1-task .task}
-Текст задания `переменная`.
+a. Загрузите [данные](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr11/share.csv) в объект `share`.
+b. Вспомните их структуру.
+
+Мы не будем анализировать пробы с двумя целевыми стимулами, а также стоит исключить из рассмотрения пробы, в которых первый клик был некорректен.
+
+c. Отберите из данных корректные пробы с одним целевым стимулом. Вместе с этим скорректируйте тип данных переменной `setsize` --- сделайте её фактором, чтобы в моделях она рассматривалась как категориальная переменная. Перезапишите объект `share`.
 :::
 
+```{r}
+## a
+share <- read_csv("https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr11/share.csv")
+## b
+str(share)
+## c
+share %>% 
+  filter(trialtype != "both" & correct1) %>% 
+  mutate(setsize = as_factor(setsize)) -> share
+```
 ::: {#pr11-1-autocheck .autocheck}
 ::: {#pr11-1-ir .input-requirements}
 Описание формата инпута.
@@ -28,7 +92,7 @@ REPLACE ALL pr11 TO pr<n> WITH MATCH CASE
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-1-hints">
 
 <summary>Подсказки</summary>
@@ -59,10 +123,16 @@ REPLACE ALL pr11 TO pr<n> WITH MATCH CASE
 <img id="pr11-2-level" class="level"/>
 
 ::: {#pr11-2-task .task}
-Текст задания.
+Данные хоть и предобработаны, однако представлены в *неаггрегированным виде*: одна строка соответствует одной пробе в отдельном сочетании условий. Использовать такие данные в дисперсионном анализе некорректно, так как это будет приводить к завышению оценок эффектов факторов.
 
-$$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
+Агрегируйте (усредните) данные по времени реакции (`time1`) каждого респондента с учетом всех (квази)экспериментальных условий, то есть всех (квази)независимых переменных, включенных в исследование. Аггрегированную переменную назовите `rt` (reaction time). Сохраните результат агрегации в объект `share_agg`.
 :::
+
+```{r}
+share %>% 
+  summarise(rt = mean(time1),
+            .by = c(id, trialtype, setsize, platform)) -> share_agg
+```
 
 ::: {#pr11-2-autocheck .autocheck}
 ::: {#pr11-2-ir .input-requirements}
@@ -77,7 +147,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-2-hints">
 
 <summary>Подсказки</summary>
@@ -108,9 +178,20 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-3-level" class="level"/>
 
 ::: {#pr11-3-task .task}
-Текст задания.
+Изучим параметризацию индикаторов. Будем рассматривать влияние платформы (`platform`) на время реакции (`rt`).
+
+a. Постройте линейную модель зависимости времени реакции от типа платформы в параметризации индикаторов.
+b. Сравните результаты моделирования со средними значениями целевой переменной по уровням предиктора.
 :::
 
+```{r}
+share_agg %>% 
+  summarise(means = mean(rt),
+            .by = platform)
+model_ind <- lm(rt ~ platform, share_agg)
+model_ind
+summary(model_ind)
+```
 ::: {#pr11-3-autocheck .autocheck}
 ::: {#pr11-3-ir .input-requirements}
 Описание формата инпута.
@@ -124,7 +205,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-3-hints">
 
 <summary>Подсказки</summary>
@@ -155,8 +236,26 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-4-level" class="level"/>
 
 ::: {#pr11-4-task .task}
-Текст задания.
+Изучим параметризацию эффектов. Будем также рассматривать влияние платформы (`platform`) на время реакции (`rt`).
+
+a. Постройте линейную модель зависимости времени реакции от типа платформы в параметризации эффектов.
+b. Сравните результаты моделирования со средними значениями целевой переменной по уровням предиктора.
 :::
+
+```{r}
+share_agg %>% 
+  summarise(means = mean(rt),
+            .by = platform)
+share_agg$rt %>% mean()
+
+model_eff <- lm(rt ~ platform, share_agg,
+                contrasts = list(platform = contr.sum))
+model_eff
+summary(model_eff)
+
+# 1.70776 + 0.05974
+# 1.70776 - 0.05974
+```
 
 ::: {#pr11-4-autocheck .autocheck}
 ::: {#pr11-4-ir .input-requirements}
@@ -171,7 +270,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-4-hints">
 
 <summary>Подсказки</summary>
@@ -197,13 +296,19 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #5
+### #5 {#pr11-5-title}
 
 <img id="pr11-5-level" class="level"/>
 
 ::: {#pr11-5-task .task}
-Текст задания.
+a. Проведите однофакторный анализ времени реакции по типу платформы.
+b. Проинтерпретируйте результаты.
 :::
+
+```{r}
+oneway_aov <- aov(rt ~ platform, share_agg)
+summary(oneway_aov)
+```
 
 ::: {#pr11-5-autocheck .autocheck}
 ::: {#pr11-5-ir .input-requirements}
@@ -218,7 +323,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-5-hints">
 
 <summary>Подсказки</summary>
@@ -249,8 +354,25 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-6-level" class="level"/>
 
 ::: {#pr11-6-task .task}
-Текст задания.
+В лекции говорилось, что модель дисперсионного анализа это то же самое, что и модель линейной регрессии.
+
+a. Сравните результаты дисперсионного анализа с результатами регрессионного анализа в параметризации индикаторов и параметризации эффектов.
+
+Мы попали в ситуацию, когда у нашего предиктора/фактора только два уровня. В лекции по этому поводу говорилось, что дисперсионный анализ и t-тест дадут нам одинаковые результаты.
+
+b. Выполните двухвыборочный t-тест на имеющихся данных и сравните его результаты с результатами дисперсионного анализа.
+
 :::
+
+```{r}
+## a
+summary(model_ind)
+summary(model_eff)
+summary(oneway_aov)
+
+## b
+t.test(rt ~ platform, share_agg)
+```
 
 ::: {#pr11-6-autocheck .autocheck}
 ::: {#pr11-6-ir .input-requirements}
@@ -265,7 +387,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-6-hints">
 
 <summary>Подсказки</summary>
@@ -296,8 +418,15 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-7-level" class="level"/>
 
 ::: {#pr11-7-task .task}
-Текст задания.
+Если мы имеем дело с идентичными моделями, то должен, кажется, существовать способ превращать одну в другую.
+
+Превратите атпуты линейных моделей (в параметризации индикаторов и эффектов) в аутпуты дисперсионного анализа.
 :::
+
+```{r}
+anova(model_ind)
+anova(model_eff)
+```
 
 ::: {#pr11-7-autocheck .autocheck}
 ::: {#pr11-7-ir .input-requirements}
@@ -312,7 +441,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-7-hints">
 
 <summary>Подсказки</summary>
@@ -343,8 +472,14 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-8-level" class="level"/>
 
 ::: {#pr11-8-task .task}
-Текст задания.
+Так как у нас две группы, то попарные сравнения бессмысленны --- по крайне мере, так было заявлено в лекции. Давайте это проверим.
+
+t-тест мы уже проводили. Проверите попарные сравнения с помощью теста Тьюки, который считается специфичным для ANOVA способом попарных сравнений.
 :::
+
+```{r}
+TukeyHSD(oneway_aov)
+```
 
 ::: {#pr11-8-autocheck .autocheck}
 ::: {#pr11-8-ir .input-requirements}
@@ -359,7 +494,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-8-hints">
 
 <summary>Подсказки</summary>
@@ -390,8 +525,14 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-9-level" class="level"/>
 
 ::: {#pr11-9-task .task}
-Текст задания.
+Визуализируйте результаты для однофакторного дисперсионного анализа.
 :::
+
+```{r}
+share_agg %>% 
+  ggplot(aes(platform, rt)) +
+  stat_summary(geom = "pointrange", fun.data = mean_cl_boot)
+```
 
 ::: {#pr11-9-autocheck .autocheck}
 ::: {#pr11-9-ir .input-requirements}
@@ -406,7 +547,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-9-hints">
 
 <summary>Подсказки</summary>
@@ -437,8 +578,19 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-10-level" class="level"/>
 
 ::: {#pr11-10-task .task}
-Текст задания.
+То, что мы посмотрели различия времени реакции по используемой платформе, конечно, хорошо, но дизайн исследования одной платформате вовсе не ограничивался. Банально, мы не учли крайне важную переменную `setsize`, которая всегда фигурирует в экспериментах на зрительных поиск и существенно сказывается на времени реакции. Давайте посмотрим на нее.
+
+a. Проведите дисперсионный анализ времени реакции по переменной `setsize`.
+b. Проинтерпретируйте результаты.
 :::
+
+```{r}
+ezANOVA(data = share_agg,
+        dv = rt,
+        within = setsize,
+        wid = id,
+        detailed = TRUE)
+```
 
 ::: {#pr11-10-autocheck .autocheck}
 ::: {#pr11-10-ir .input-requirements}
@@ -453,7 +605,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-10-hints">
 
 <summary>Подсказки</summary>
@@ -484,8 +636,16 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-11-level" class="level"/>
 
 ::: {#pr11-11-task .task}
-Текст задания.
+При анализе влияния сетсайза на время реакции мы получили статистически значимый результат --- в общем-то ничего удивительного, странно было бы, если бы мы его не получили. Так как сетсайза у нас было три (`8`, `12`, `16`), необходимо проводить попарные сравнения (post hoc тесты), чтобы выяснить, между какими сетсайзами были различия.
+
+Выполните попарные сравнения сетсайзов.
 :::
+
+```{r}
+pairwise.t.test(x = share_agg$rt,
+                g = share_agg$setsize,
+                paired = TRUE)
+```
 
 ::: {#pr11-11-autocheck .autocheck}
 ::: {#pr11-11-ir .input-requirements}
@@ -500,7 +660,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-11-hints">
 
 <summary>Подсказки</summary>
@@ -528,11 +688,19 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 ### #12
 
-<img class="level"/>
+<img id="pr11-12-level" class="level"/>
 
 ::: {#pr11-12-task .task}
-Текст задания.
+Визуализируйте результаты анализа влияния сетсайза на время реакции.
 :::
+
+```{r}
+share_agg %>% 
+  ggplot(aes(setsize, rt, group = 1)) +
+  stat_summary(geom = "line", fun = mean,
+               linetype = "dashed") +
+  stat_summary(geom = "pointrange", fun.data = mean_cl_boot)
+```
 
 ::: {#pr11-12-autocheck .autocheck}
 ::: {#pr11-12-ir .input-requirements}
@@ -547,7 +715,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-12-hints">
 
 <summary>Подсказки</summary>
@@ -573,13 +741,28 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
-### #13
+### #13 {#pr11-13-title}
 
 <img id="pr11-13-level" class="level"/>
 
-::: task
-Текст задания.
+::: {#pr11-13-task .task}
+Окей, на сейсайз мы посмотрели, однако всё ещё дизайн исследования включал в себя три (квази)неависимые переменные сразу --- `trialtype`, `setsize` и `platform`. Давайте уже сделаем полную модель и выясним, что там все-таки с различиями.
+
+a. Проведите смешанный дисперсионный анализ. В его модель должны входить в качестве within-subject эффектов переменные `trialtype` и `setsize`, а в качестве between-subject эффекта переменная `platform`. Зависимая переменная остается та же --- `rt`.
+b. Проинтерпретируйте полученные результаты. Обратите внимание на размер эффекта.
 :::
+
+```{r}
+ez_mix <- ezANOVA(data = share_agg,
+        dv = rt,
+        between = platform,
+        within = .(setsize, trialtype),
+        wid = id,
+        return_aov = TRUE,
+        detailed = TRUE)
+
+ez_mix %>% psychReport::aovEffectSize()
+```
 
 ::: {#pr11-13-autocheck .autocheck}
 ::: {#pr11-13-ir .input-requirements}
@@ -594,7 +777,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-13-hints">
 
 <summary>Подсказки</summary>
@@ -625,8 +808,14 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-14-level" class="level"/>
 
 ::: {#pr11-14-task .task}
-Текст задания.
+Проведите необходимые попарные сравнения для последней построенной модели.
 :::
+
+```{r}
+pairwise.t.test(x = share_agg$rt,
+                g = interaction(share_agg$trialtype, share_agg$setsize),
+                paired = TRUE)
+```
 
 ::: {#pr11-14-autocheck .autocheck}
 ::: {#pr11-14-ir .input-requirements}
@@ -641,7 +830,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-14-hints">
 
 <summary>Подсказки</summary>
@@ -672,8 +861,20 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-15-level" class="level"/>
 
 ::: {#pr11-15-task .task}
-Текст задания.
+Визуализируйте результаты смешанного дисперсионного анализа.
 :::
+
+```{r}
+pd <- position_dodge(.5)
+share_agg %>% 
+  ggplot(aes(setsize, rt, 
+             color = trialtype, 
+             shape = platform,
+             group = interaction(trialtype, platform))) +
+  stat_summary(geom = "line", fun = mean,
+               linetype = "dashed", position = pd) +
+  stat_summary(geom = "pointrange", fun.data = mean_cl_boot, position = pd)
+```
 
 ::: {#pr11-15-autocheck .autocheck}
 ::: {#pr11-15-ir .input-requirements}
@@ -688,7 +889,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-15-hints">
 
 <summary>Подсказки</summary>
@@ -719,8 +920,18 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-16-level" class="level"/>
 
 ::: {#pr11-16-task .task}
-Текст задания.
+В самом начале мы агрегировали данные, чтобы получить корректные результаты ANOVA. На самом деле, функция `ezANOVA()` достаточно умная, и даже если мы её передадим неагрегированные данные, она их всё равно усреднит, и мы получим тот же результат, что и на агрегированных данных.
+
+Однако так работают не все функции. Постройте модель из [задания 5](#pr11-5-title) на неагрегированных данных и сравните результаты с тем, что получалось на агрегированных данных.
 :::
+
+```{r}
+summary(aov(rt ~ platform, share_agg))
+```
+
+```{r}
+summary(aov(time1 ~ platform, share))
+```
 
 ::: {#pr11-16-autocheck .autocheck}
 ::: {#pr11-16-ir .input-requirements}
@@ -735,7 +946,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-16-hints">
 
 <summary>Подсказки</summary>
@@ -766,8 +977,35 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-17-level" class="level"/>
 
 ::: {#pr11-17-task .task}
-Текст задания.
+Возьмем еще одни данные --- на этот раз [о курящих детях и подростках](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr11/fev.txt).
+
+Файл содержит данные об объёме форсированного выдоха (ОФВ) (forced expiratory volume, FEV)[^fev] (`FEV`) у курящих и некурящих детей (`Smoker`: `Non`, `Current`) в возрасте (`Age`) от 3 до 19 лет и информацию о поле (`Sex`), росте (`Height`) и ID пациента (`ID`).
+
+[^fev]: Объём воздуха, выдыхаемого за первую секунду манёвра форсированного выдоха. Используется для расчёта индекса наличия/отсутствия ухудшения проходимости дыхательных путей.
+
+a. Загрузите данные. Проверье их структуру.
+b. Постройте линейные модели, опизывающие связь ОФВ (`FEV`) с полом (`Sex`) и статусом курения (`Smoker`) в параметризации индикаторов и параметизации эффектов. Модели должны включать взаимодействие предикторов.
+c. Какой тип сумм квадратов корректно использоваться в данном случае для тестирования гипотез о значимости факторов?
+d. Сравните результаты тестирования гипотез о значимости факторов в случае II и III типов сумм квадратов для параметризации индикаторов и параметризации эффектов.
 :::
+
+```{r}
+## a
+fev <- read_tsv("https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr11/fev.txt")
+str(fev)
+
+## b
+fev_ind <- lm(FEV ~ Smoker * Sex, fev)
+fev_eff <- lm(FEV ~ Smoker * Sex, fev,
+              contrasts = list(Smoker = "contr.sum",
+                               Sex = "contr.sum"))
+
+## d
+car::Anova(fev_ind, type = "II")
+car::Anova(fev_eff, type = "II")
+car::Anova(fev_ind, type = "III")
+car::Anova(fev_eff, type = "III")
+```
 
 ::: {#pr11-17-autocheck .autocheck}
 ::: {#pr11-17-ir .input-requirements}
@@ -782,7 +1020,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-17-hints">
 
 <summary>Подсказки</summary>
@@ -813,8 +1051,21 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-18-level" class="level"/>
 
 ::: {#pr11-18-task .task}
-Текст задания.
+a. Визуализируйте зависимость ОФВ (`FEV`) от статуса курения (`Smoker`).
+b. Изучите график. Есть ли на нем что-то странное?
+c. Дополните график одно важной переменной, которую необходимо учесть в анализе для получения корректных результатов.
 :::
+
+```{r}
+fev %>% 
+  ggplot(aes(Smoker, FEV)) +
+  stat_summary(geom = "pointrange", fun.data = mean_cl_boot)
+
+fev %>% 
+  ggplot(aes(Height, FEV, color = Smoker)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
 
 ::: {#pr11-18-autocheck .autocheck}
 ::: {#pr11-18-ir .input-requirements}
@@ -829,7 +1080,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-18-hints">
 
 <summary>Подсказки</summary>
@@ -860,8 +1111,17 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-19-level" class="level"/>
 
 ::: {#pr11-19-task .task}
-Текст задания.
+a. Постройте модель, соотвутствующую получившейся в предыдущем задании визуализации.
+b. Проверьте, можно ли упростить эту модель.
+с. Если это возможно, упростите и проинтерпретируйте результаты.
 :::
+
+```{r}
+fev_cov <- lm(FEV ~ Smoker * Height, fev)
+drop1(fev_cov, test = "F", type = "III")
+fev_cov1 <- update(fev_cov, .~. -Smoker:Height)
+drop1(fev_cov1, test = "F", type = "III")
+```
 
 ::: {#pr11-19-autocheck .autocheck}
 ::: {#pr11-19-ir .input-requirements}
@@ -876,7 +1136,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-19-hints">
 
 <summary>Подсказки</summary>
@@ -907,8 +1167,19 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-20-level" class="level"/>
 
 ::: {#pr11-20-task .task}
-Текст задания.
+Займемся экспортом результатов.
+
+a. Экспортируйте результаты дисперсионного анализа из [задания 5](#pr11-5-title).
+a. Экспортируйте результаты дисперсионного анализа из [задания 13](#pr11-13-title).
 :::
+
+```{r}
+report::report(oneway_aov)
+report::report(ez_mix$aov)
+apaTables::apa.aov.table(oneway_aov, filename = "oneway.doc")
+apaTables::apa.ezANOVA.table(ez_mix)
+ez_mix %>% psychReport::aovEffectSize() %>% .$ANOVA %>% write_excel_csv("ez_mix.xlsx")
+```
 
 ::: {#pr11-20-autocheck .autocheck}
 ::: {#pr11-20-ir .input-requirements}
@@ -923,7 +1194,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-20-hints">
 
 <summary>Подсказки</summary>
@@ -951,13 +1222,52 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 ## Дополнительные задания {#pr11_add}
 
+:::{.callout-note}
+
+## Новый датасет
+
+Пришло время уделить внимание контрастам!
+
+Для этого возьмем лингвистические данные. Если быть более точным, то это [фонетические данные о гласных русского языка](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr11/vowels.csv).
+
+Нас будут интересовать следующие переменные:
+
+- `duration` --- длительность гласного
+- `reduction` --- степень редукции (`no` --- нет редукции, `first` --- первая ступень редукции, `second` --- вторая ступень редукции)
+- `position` --- позиция гласного (`S` --- ударный гласный, `I` --- абсолютное начало слова, `R` --- предударный слог, `T` --- заударный слог, `F` --- абсолютный конце слова, `O` --- остальные слоги).
+
+Минимальная теория, которую нужно знать, чтобы понимать происходящее в данных:
+
+- в русском языке есть редукция гласных
+    - если на гласный *падает ударение*, то он не редуцируется
+    - если он стоит в *абсолютном начале слова* или *в предударном слоге*, то наступает первая ступень редукции
+    - если он стоит в *любом другом месте*, то наступает вторая ступень редукции
+- редукция гласного обозначает уменьшение его длительности[^reduction]
+    - нередуцированные гласные наиболее длительные
+    - гласные в первой ступени редукции короче нередуцированных
+    - гласные во второй ступени редукции короче гласных в первой ступени редукции
+
+[^reduction]: А также изменение спектрального состава, но здесь мы это рассматривать не будем.
+
+:::
+
 ### #1
 
 <img id="pr11-21-level" class="level"/>
 
 ::: {#pr11-21-task .task}
-Текст задания.
+a. Загрузите [данные](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr11/vowels.csv).
+b. Посмотрите их структуру.
+c. Приведите переменные `reduction` и `position` к факторам --- это необходимо для задания контрастов.
 :::
+
+```{r}
+vowels <- read_csv("https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr11/vowels.csv")
+
+vowels %>% 
+  mutate(reduction = as_factor(reduction),
+         position = as_factor(position)) -> vowels
+```
 
 ::: {#pr11-21-autocheck .autocheck}
 ::: {#pr11-21-ir .input-requirements}
@@ -972,7 +1282,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-21-hints">
 
 <summary>Подсказки</summary>
@@ -1003,8 +1313,15 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-22-level" class="level"/>
 
 ::: {#pr11-22-task .task}
-Текст задания.
+a. Визуализируйте зависимость длительности гласного (`duration`) от степени редукции (`reduction`).
+b. Если ли что-то странное на графике?
 :::
+
+```{r}
+vowels %>% 
+  ggplot(aes(reduction, duration)) +
+  stat_summary(geom = "pointrange", fun.data = mean_cl_boot)
+```
 
 ::: {#pr11-22-autocheck .autocheck}
 ::: {#pr11-22-ir .input-requirements}
@@ -1019,7 +1336,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-22-hints">
 
 <summary>Подсказки</summary>
@@ -1050,8 +1367,16 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-23-level" class="level"/>
 
 ::: {#pr11-23-task .task}
-Текст задания.
+a. Визуализируйте зависимость длительности гласного (`duration`) от степени редукции (`reduction`) и позиции в слове (`position`).
+b. Почему наблюдалась такая ситуация на предыдущем графике?
 :::
+
+```{r}
+vowels %>% 
+  ggplot(aes(reduction, duration, color = position)) +
+  stat_summary(geom = "pointrange", fun.data = mean_cl_boot,
+               position = position_dodge(.3))
+```
 
 ::: {#pr11-23-autocheck .autocheck}
 ::: {#pr11-23-ir .input-requirements}
@@ -1066,7 +1391,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-23-hints">
 
 <summary>Подсказки</summary>
@@ -1097,8 +1422,15 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-24-level" class="level"/>
 
 ::: {#pr11-24-task .task}
-Текст задания.
+Нас интересует следующей вопрос: *отличается ли длительность нередуцированных гласных от длительности всех остальных (редуцированных)?*
+
+Задайте соответствующие контрасты для переменной `reduction`.
 :::
+
+```{r}
+levels(vowels$reduction)
+contrasts(vowels$reduction) <- c(-.5, 1, -.5)
+```
 
 ::: {#pr11-24-autocheck .autocheck}
 ::: {#pr11-24-ir .input-requirements}
@@ -1113,7 +1445,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-24-hints">
 
 <summary>Подсказки</summary>
@@ -1144,8 +1476,15 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-25-level" class="level"/>
 
 ::: {#pr11-25-task .task}
-Текст задания.
+Протестируйте гипотезу о различии длительности редуцированных и нередуцированных гласных с помощью заданных ранее контрастов.
 :::
+
+```{r}
+reduction_contr <- aov(duration ~ reduction, vowels)
+summary(reduction_conts)
+summary(reduction_conts,
+        split = list(reduction = list("no vs other" = 1)))
+```
 
 ::: {#pr11-25-autocheck .autocheck}
 ::: {#pr11-25-ir .input-requirements}
@@ -1160,7 +1499,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-25-hints">
 
 <summary>Подсказки</summary>
@@ -1191,8 +1530,18 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-26-level" class="level"/>
 
 ::: {#pr11-26-task .task}
-Текст задания.
+Теперь нас заинтересовал следующей вопрос: *отличается ли длительность нередуцированных гласных от длительности гласных первой супени редукции?*
+
+Добавьте соответствующие контрасты для переменной `reduction`.
 :::
+
+```{r}
+levels(vowels$reduction)
+no_vs_other <- c(-.5, 1, -.5)
+no_vs_first <- c(-1, 1, 0)
+cont_mat <- cbind(no_vs_other, no_vs_first)
+contrasts(vowels$reduction) <- cont_mat
+```
 
 ::: {#pr11-26-autocheck .autocheck}
 ::: {#pr11-26-ir .input-requirements}
@@ -1207,7 +1556,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-26-hints">
 
 <summary>Подсказки</summary>
@@ -1238,8 +1587,16 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-27-level" class="level"/>
 
 ::: {#pr11-27-task .task}
-Текст задания.
+Протестируйте гипотезу о различии длительности нередуцированных гласных и гласных первой ступени редукции с помощью заданных выше контрастов.
 :::
+
+```{r}
+reduction_contr2 <- aov(duration ~ reduction, vowels)
+summary(reduction_conts2)
+summary(reduction_conts2,
+        split = list(reduction = list("no vs other" = 1,
+                                      "no vs first" = 2)))
+```
 
 ::: {#pr11-27-autocheck .autocheck}
 ::: {#pr11-27-ir .input-requirements}
@@ -1254,7 +1611,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-27-hints">
 
 <summary>Подсказки</summary>
@@ -1285,8 +1642,17 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-28-level" class="level"/>
 
 ::: {#pr11-28-task .task}
-Текст задания.
+В группе гласных второй ступени редукции выделяются гласные абсолютного конца слова --- по графику они оказываются более длительными, чем другие гласные второй ступени редукции.
+
+Вопрос: отличается ли длительной гласных в абсолютном конце слова (`F`) от длительности других гласных второй ступени редукции (`T + O`)?
+
+Задайте соответствующие контрасты для переменной `position`.
 :::
+
+```{r}
+levels(vowels$position)
+contrasts(vowels$position) <- c(0, 0, .5, -1, 0, .5)
+```
 
 ::: {#pr11-28-autocheck .autocheck}
 ::: {#pr11-28-ir .input-requirements}
@@ -1301,7 +1667,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-28-hints">
 
 <summary>Подсказки</summary>
@@ -1332,8 +1698,15 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-29-level" class="level"/>
 
 ::: {#pr11-29-task .task}
-Текст задания.
+Протестируйте гипотезу об отличии длительности гласных абсолютного конца слова от длительности других гласных второй ступени редукции с помощью заданных выше контрастов.
 :::
+
+```{r}
+position_contr <- aov(duration ~ position, vowels)
+summary(position_contr)
+summary(position_contr,
+        split = list(position = list("F vs T+O" = 1)))
+```
 
 ::: {#pr11-29-autocheck .autocheck}
 ::: {#pr11-29-ir .input-requirements}
@@ -1348,7 +1721,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-29-hints">
 
 <summary>Подсказки</summary>
@@ -1379,8 +1752,21 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr11-30-level" class="level"/>
 
 ::: {#pr11-30-task .task}
-Текст задания.
+
+Ну, и последний вопрос к конрастам: отличается ли длительность ударных гласных (`S`) от длительности предударных и заударных гласных (`R + T`)?
+
+a. Задайте соответствующие контрасты для переменной `position`.
+b. Протестируйте гипотезу об отличии длительности ударных гласных от длительности предударных и заударных с помощью заданных контрастов.
 :::
+
+```{r}
+levels(vowels$position)
+contrasts(vowels$position) <- c(0, -1, .5, 0, .5, 0)
+position_contr2 <- aov(duration ~ position, vowels)
+summary(position_contr)
+summary(position_contr,
+        split = list(position = list("S vs R+T" = 1)))
+```
 
 ::: {#pr11-30-autocheck .autocheck}
 ::: {#pr11-30-ir .input-requirements}
@@ -1395,7 +1781,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr11-30-hints">
 
 <summary>Подсказки</summary>
