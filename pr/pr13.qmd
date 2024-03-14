@@ -5,17 +5,41 @@
 REPLACE ALL pr13 TO pr<n> WITH MATCH CASE
 -->
 ```
+
+```{r opts, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, message = FALSE, warning = FALSE)
+```
+
+
 ## Основные задания {#pr13_main}
+
+```{r pkgs, eval=TRUE}
+pkgs <- c("mgcv", "glmnet")
+install.packages(pkgs[!pkgs %in% installed.packages()])
+library(tidyverse)
+theme_set(theme_bw())
+theme_update(legend.position = "bottom")
+library(mgcv)
+library(glmnet)
+```
+
 
 ### #1
 
 <img id="pr13-1-level" class="level"/>
 
 ::: {#pr13-1-task .task}
-Текст задания `переменная`.
+Сегодня мы посмотрим на данные про авокадо. Точнее о продажах авокадо в разных регионах с 2015 по 2018 года. Загрузите [данные](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr13/avocado.csv). Проверьте их структуру.
 :::
 
-::: {#pr13-1-autocheck .autocheck}
+```{r}
+# read_csv("https://raw.githubusercontent.com/agricolamz/2019.08.01_ANDAN_GAM/master/data/avocado.csv") %>%
+#   write_csv("../data/pr13/avocado.csv")
+
+avocado <- read_csv("https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr13/avocado.csv")
+```
+
+::: {#pr13-1-autocheck .autocheck hidden="true"}
 ::: {#pr13-1-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -28,7 +52,7 @@ REPLACE ALL pr13 TO pr<n> WITH MATCH CASE
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-1-hints">
 
 <summary>Подсказки</summary>
@@ -59,10 +83,23 @@ REPLACE ALL pr13 TO pr<n> WITH MATCH CASE
 <img id="pr13-2-level" class="level"/>
 
 ::: {#pr13-2-task .task}
-Текст задания.
-
-$$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
+a. Для начала потренируемся на части данных, чтобы поделируемая закономерность была проще. Отберите данные о продаже авокадо типа `organic` только из региона `Sacramento`.
+b. Визуализируйте зависимость средней цены `AveragePrice` от дня года `Date2`.
 :::
+
+```{r}
+## a
+avocado %>% 
+  filter(region == "Sacramento" & a_type == "organic") -> av_s_org
+
+## b
+av_s_org %>% 
+  ggplot(aes(Date2, AveragePrice)) +
+  geom_point() +
+  # geom_smooth(method = "lm")
+  # geom_smooth(method = "gam")
+  geom_smooth()
+```
 
 ::: {#pr13-2-autocheck .autocheck}
 ::: {#pr13-2-ir .input-requirements}
@@ -77,7 +114,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-2-hints">
 
 <summary>Подсказки</summary>
@@ -108,8 +145,21 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-3-level" class="level"/>
 
 ::: {#pr13-3-task .task}
-Текст задания.
+a. Постройте на отобранных данных полиномиальную модель. В качестве целевой переменной в модель включите `AveragePrice`, а в качестве предиктора день года `Date2`. Используйте полином второй степени.
+b. Визуализируйте получившуюся модель.
 :::
+
+```{r}
+## a
+poly2 <- lm(AveragePrice ~ poly(Date2, 2), av_s_org)
+
+## b
+av_s_org %>% 
+  ggplot(aes(Date2, AveragePrice)) +
+  geom_point() +
+  geom_line(aes(y = poly2$fitted.values), 
+            color = "blue")
+```
 
 ::: {#pr13-3-autocheck .autocheck}
 ::: {#pr13-3-ir .input-requirements}
@@ -124,7 +174,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-3-hints">
 
 <summary>Подсказки</summary>
@@ -155,8 +205,21 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-4-level" class="level"/>
 
 ::: {#pr13-4-task .task}
-Текст задания.
+a. Постройте на отобранных данных другую полиномиальную модель. В качестве целевой переменной в модель также включите `AveragePrice`, а в качестве предиктора день года `Date2`, но используйте полином третьей степени.
+b. Визуализируйте получившуюся модель.
 :::
+
+```{r}
+## a
+poly3 <- lm(AveragePrice ~ poly(Date2, 3), av_s_org)
+
+## b
+av_s_org %>% 
+  ggplot(aes(Date2, AveragePrice)) +
+  geom_point() +
+  geom_line(aes(y = poly3$fitted.values), 
+            color = "blue")
+```
 
 ::: {#pr13-4-autocheck .autocheck}
 ::: {#pr13-4-ir .input-requirements}
@@ -171,7 +234,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-4-hints">
 
 <summary>Подсказки</summary>
@@ -202,8 +265,14 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-5-level" class="level"/>
 
 ::: {#pr13-5-task .task}
-Текст задания.
+Постройте на отобранных данных ещё несколько полиномиальных моделей. Целевая переменная и предикторы пусть останутся те же, но теперь используйте полиномы седьмой, десятой и двадцатой степени.
 :::
+
+```{r}
+poly7 <- lm(AveragePrice ~ poly(Date2, 7), av_s_org)
+poly10 <- lm(AveragePrice ~ poly(Date2, 10), av_s_org)
+poly20 <- lm(AveragePrice ~ poly(Date2, 20), av_s_org)
+```
 
 ::: {#pr13-5-autocheck .autocheck}
 ::: {#pr13-5-ir .input-requirements}
@@ -218,7 +287,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-5-hints">
 
 <summary>Подсказки</summary>
@@ -249,8 +318,26 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-6-level" class="level"/>
 
 ::: {#pr13-6-task .task}
-Текст задания.
+a. Визуализируйте все построенные полиномиальные модели на одной графике.
+b. Выберите модель, которая наиболее адекватно описывает закономерность данных.
 :::
+
+```{r}
+tibble(x = av_s_org$Date2,
+       poly2 = poly2$fitted.values,
+       poly3 = poly3$fitted.values,
+       poly7 = poly7$fitted.values,
+       poly10 = poly10$fitted.values,
+       poly20 = poly20$fitted.values) %>% 
+  pivot_longer(cols = -x) %>% 
+  ggplot() +
+  geom_point(data = av_s_org, 
+             aes(Date2, AveragePrice)) +
+  geom_line(aes(x = x,
+                y = value, 
+                color = name),
+            size = 1)
+```
 
 ::: {#pr13-6-autocheck .autocheck}
 ::: {#pr13-6-ir .input-requirements}
@@ -265,7 +352,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-6-hints">
 
 <summary>Подсказки</summary>
@@ -296,8 +383,12 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-7-level" class="level"/>
 
 ::: {#pr13-7-task .task}
-Текст задания.
+Выведите статистики для модели, выбранной в предыдущем задании.
 :::
+
+```{r}
+summary(poly7)
+```
 
 ::: {#pr13-7-autocheck .autocheck}
 ::: {#pr13-7-ir .input-requirements}
@@ -312,7 +403,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-7-hints">
 
 <summary>Подсказки</summary>
@@ -343,8 +434,19 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-8-level" class="level"/>
 
 ::: {#pr13-8-task .task}
-Текст задания.
+a. Постройте обобщенную аддитивную модель на отобранных данных, в которой нелинейным предиктором будет день года, а целевой переменной средняя цена авокадо.
+b. Визуализируйте получившуются модель.
 :::
+
+```{r}
+gam1 <- gam(AveragePrice ~ s(Date2), data = av_s_org)
+av_s_org %>% 
+  ggplot(aes(Date2, AveragePrice)) +
+  geom_point() +
+  geom_line(aes(y = gam1$fitted.values), 
+            color = "blue") +
+  labs(caption = gam1$call)
+```
 
 ::: {#pr13-8-autocheck .autocheck}
 ::: {#pr13-8-ir .input-requirements}
@@ -359,7 +461,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-8-hints">
 
 <summary>Подсказки</summary>
@@ -390,8 +492,46 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-9-level" class="level"/>
 
 ::: {#pr13-9-task .task}
-Текст задания.
+Возьмите за основу модель из предыдущего задания и попробуйте варьировать параметры сплайнов --- степень сглаживания и степень полинома. Сравните результаты моделирования с помощью визуализаций.
 :::
+
+```{r}
+gam2 <- gam(AveragePrice ~ s(Date2, sp = .1), 
+            data = av_s_org)
+av_s_org %>% 
+  ggplot(aes(Date2, AveragePrice)) +
+  geom_point() +
+  geom_line(aes(y = gam2$fitted.values), 
+            color = "blue") +
+  labs(caption = gam2$call)
+
+gam3 <- gam(AveragePrice ~ s(Date2, sp = 1), 
+            data = av_s_org)
+av_s_org %>% 
+  ggplot(aes(Date2, AveragePrice)) +
+  geom_point() +
+  geom_line(aes(y = gam3$fitted.values), 
+            color = "blue") +
+  labs(caption = gam3$call)
+
+gam4 <- gam(AveragePrice ~ s(Date2, k = 20), 
+            data = av_s_org)
+av_s_org %>% 
+  ggplot(aes(Date2, AveragePrice)) +
+  geom_point() +
+  geom_line(aes(y = gam4$fitted.values), 
+            color = "blue") +
+  labs(caption = gam4$call)
+
+gam5 <- gam(AveragePrice ~ s(Date2, k = 4), 
+            data = av_s_org)
+av_s_org %>% 
+  ggplot(aes(Date2, AveragePrice)) +
+  geom_point() +
+  geom_line(aes(y = gam5$fitted.values), 
+            color = "blue") +
+  labs(caption = gam5$call)
+```
 
 ::: {#pr13-9-autocheck .autocheck}
 ::: {#pr13-9-ir .input-requirements}
@@ -406,7 +546,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-9-hints">
 
 <summary>Подсказки</summary>
@@ -437,8 +577,13 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-10-level" class="level"/>
 
 ::: {#pr13-10-task .task}
-Текст задания.
+Выберите GAM, которая наиболее адекватно описывает данные с помощью визуализаций. Выведите статистики модели. Проинтерпретируйте результаты.
 :::
+
+```{r}
+summary(gam1)
+```
+
 
 ::: {#pr13-10-autocheck .autocheck}
 ::: {#pr13-10-ir .input-requirements}
@@ -453,7 +598,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-10-hints">
 
 <summary>Подсказки</summary>
@@ -484,8 +629,25 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-11-level" class="level"/>
 
 ::: {#pr13-11-task .task}
-Текст задания.
+Давайте попробуем включить в модель несколько предикторов --- один нелинейный количественный и один категориальный. Для этого нам необходим новый сабсет данных.
+
+a. Отберите данные только из региона `Sacramento`, но на этот раз без учета типа авокадо --- в сабсете данных должны остаться и `conventional`, и `organic`.
+b. Визуализируйте зависимость средней цены от дня года с разбиением по типу авокадо.
 :::
+
+```{r}
+## a
+avocado %>% 
+  filter(region == "Sacramento") %>% 
+  mutate(
+    a_type = factor(a_type)
+    ) -> avocado_sacr
+## b
+
+avocado_sacr %>% 
+  ggplot(aes(Date2, AveragePrice, color = a_type)) +
+  geom_point()
+```
 
 ::: {#pr13-11-autocheck .autocheck}
 ::: {#pr13-11-ir .input-requirements}
@@ -500,7 +662,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-11-hints">
 
 <summary>Подсказки</summary>
@@ -528,11 +690,28 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 ### #12
 
-<img class="level"/>
+<img id="pr13-12-level" class="level"/>
 
 ::: {#pr13-12-task .task}
-Текст задания.
+a. Постройте обобщенную аддитивную модель, в которой категориальный предиктор `a_type` задан вне функции сплайнов.
+b. Визуализируйте полученную модель.
+c. Выведите статистики модели. Проинтерпретируйте результаты.
 :::
+
+```{r}
+gam6 <- gam(AveragePrice ~ s(Date2) + a_type, 
+            data = avocado_sacr)
+
+tibble(x = avocado_sacr$Date2,
+       a_type = avocado_sacr$a_type,
+       y = gam6$fitted.values) %>% 
+  ggplot() +
+  geom_point(data = avocado_sacr,
+             aes(Date2, AveragePrice, color = a_type)) +
+  geom_line(aes(x = x, y = y, color = a_type))
+
+summary(gam6)
+```
 
 ::: {#pr13-12-autocheck .autocheck}
 ::: {#pr13-12-ir .input-requirements}
@@ -547,7 +726,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-12-hints">
 
 <summary>Подсказки</summary>
@@ -578,8 +757,25 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-13-level" class="level"/>
 
 ::: task
-Текст задания.
+a. Постройте обобщенную аддитивную модель, в которой категориальный предиктор `a_type` задан внутри функции сплайнов.
+b. Визуализируйте полученную модель.
+c. Выведите статистики модели. Проинтерпретируйте результаты.
 :::
+
+```{r}
+gam7 <- gam(AveragePrice ~ s(Date2, by = a_type),
+            data = avocado_sacr)
+
+tibble(x = avocado_sacr$Date2,
+       a_type = avocado_sacr$a_type,
+       y = gam7$fitted.values) %>% 
+  ggplot() +
+  geom_point(data = avocado_sacr,
+             aes(Date2, AveragePrice, color = a_type)) +
+  geom_line(aes(x = x, y = y, color = a_type))
+
+summary(gam7)
+```
 
 ::: {#pr13-13-autocheck .autocheck}
 ::: {#pr13-13-ir .input-requirements}
@@ -594,7 +790,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-13-hints">
 
 <summary>Подсказки</summary>
@@ -625,8 +821,25 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-14-level" class="level"/>
 
 ::: {#pr13-14-task .task}
-Текст задания.
+a. Постройте обобщенную аддитивную модель, в которой категориальный предиктор `a_type` задан и внутри, и вне функции сплайнов.
+b. Визуализируйте полученную модель.
+c. Выведите статистики модели. Проинтерпретируйте результаты.
 :::
+
+```{r}
+gam8 <- gam(AveragePrice ~ s(Date2, by = a_type) + a_type,
+            data = avocado_sacr)
+
+tibble(x = avocado_sacr$Date2,
+       a_type = avocado_sacr$a_type,
+       y = gam8$fitted.values) %>% 
+  ggplot() +
+  geom_point(data = avocado_sacr,
+             aes(Date2, AveragePrice, color = a_type)) +
+  geom_line(aes(x = x, y = y, color = a_type))
+
+summary(gam8)
+```
 
 ::: {#pr13-14-autocheck .autocheck}
 ::: {#pr13-14-ir .input-requirements}
@@ -641,7 +854,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-14-hints">
 
 <summary>Подсказки</summary>
@@ -672,8 +885,22 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-15-level" class="level"/>
 
 ::: {#pr13-15-task .task}
-Текст задания.
+a. Сравните модели с категориальным предиктором с помощьюь информационных критериев.
+b. Проведите диагностику модели, которая лучше всего соответствует данным.
+с. Проверьте наличие concurvity в модели
 :::
+
+```{r}
+## a
+AIC(gam6, gam7, gam8)
+BIC(gam6, gam7, gam8)
+
+## b
+gam.check(gam8)
+
+## c
+concurvity(gam8)
+```
 
 ::: {#pr13-15-autocheck .autocheck}
 ::: {#pr13-15-ir .input-requirements}
@@ -688,7 +915,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-15-hints">
 
 <summary>Подсказки</summary>
@@ -719,8 +946,20 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-16-level" class="level"/>
 
 ::: {#pr13-16-task .task}
-Текст задания.
+Вторый данные на сегодня про менеджеров-продажников. Они содержат информацию о некоторых характеристиках менеджеров (количественные шкалы `Fx`, `Cs`, `Sy`, `Sp`, `In`, `Em`, `Re`, `Sc`, `Ie`, `Do`), а также сумму, на которую менеджер напродавал. Наша задача узнать, какие характеристики менеджеров сильнее всего связаны с их эффективностью в продажах.
+
+Загрузие данные. Проверьте их структуру.
 :::
+
+```{r}
+# readxl::read_xlsx("../data/pr13/cpi.xlsx") %>% write_csv("../data/pr13/cpi.csv")
+```
+
+```{r}
+cpi <- read_csv("https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/pr13/cpi.csv")
+str(cpi)
+table(cpi$group)
+```
 
 ::: {#pr13-16-autocheck .autocheck}
 ::: {#pr13-16-ir .input-requirements}
@@ -735,7 +974,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-16-hints">
 
 <summary>Подсказки</summary>
@@ -766,9 +1005,17 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-17-level" class="level"/>
 
 ::: {#pr13-17-task .task}
-Текст задания.
+Для функций регуляризованной регрессии нужна некоторая предобработка данных: требуется отдельно вектор целевой переменной и отдельно матрица предикторов.
+
+a. Создайте вектор `prodazhi`, в которой будут содержаться значения из колонки `prodazhi` датасета.
+b. Отберите из датасета только количественные переменные и создайте из них матрицу предикторов `preds`.
 :::
 
+```{r}
+cpi %>% pull(prodazhi) -> prodazhi
+cpi %>% select(-prodazhi, -group) %>% as.matrix() -> preds
+cor(preds) %>% ggcorrplot::ggcorrplot(lab = TRUE)
+```
 ::: {#pr13-17-autocheck .autocheck}
 ::: {#pr13-17-ir .input-requirements}
 Описание формата инпута.
@@ -782,7 +1029,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-17-hints">
 
 <summary>Подсказки</summary>
@@ -813,8 +1060,17 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-18-level" class="level"/>
 
 ::: {#pr13-18-task .task}
-Текст задания.
+a. Постройте модель ridge-регрессии на имеющихся данных.
+b. Выведите график зависимости ошибки модели от штрафного коэффициента.
+c. Выведите коэффициенты модели.
 :::
+
+```{r}
+model_ridge <- cv.glmnet(x = preds, y = prodazhi, alpha = 0)
+plot(model_ridge)
+coef(model_ridge, s = "lambda.min")
+coef(model_ridge, s = "lambda.1se")
+```
 
 ::: {#pr13-18-autocheck .autocheck}
 ::: {#pr13-18-ir .input-requirements}
@@ -829,7 +1085,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-18-hints">
 
 <summary>Подсказки</summary>
@@ -860,8 +1116,17 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="pr13-19-level" class="level"/>
 
 ::: {#pr13-19-task .task}
-Текст задания.
+a. Постройте модель LASSO-регрессии на имеющихся данных.
+b. Выведите график зависимости ошибки модели от штрафного коэффициента.
+c. Выведите коэффициенты модели.
 :::
+
+```{r}
+model_lasso <- cv.glmnet(x = preds, y = prodazhi, alpha = 1)
+plot(model_lasso)
+coef(model_lasso, s = "lambda.min")
+coef(model_lasso, s = "lambda.1se")
+```
 
 ::: {#pr13-19-autocheck .autocheck}
 ::: {#pr13-19-ir .input-requirements}
@@ -876,7 +1141,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-19-hints">
 
 <summary>Подсказки</summary>
@@ -902,13 +1167,15 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
+<!---
 ### #20
 
 <img id="pr13-20-level" class="level"/>
 
 ::: {#pr13-20-task .task}
-Текст задания.
+Текст задания
 :::
+
 
 ::: {#pr13-20-autocheck .autocheck}
 ::: {#pr13-20-ir .input-requirements}
@@ -923,7 +1190,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="pr13-20-hints">
 
 <summary>Подсказки</summary>
@@ -949,6 +1216,9 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
+--->
+
+<!---
 ## Дополнительные задания {#pr13_add}
 
 ### #1
@@ -1420,6 +1690,8 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 </details>
 :::
+
+--->
 
 ```{=html}
 <!--- CHANGE pr13 TO pr<n> IN THE LINES BELOW--->
