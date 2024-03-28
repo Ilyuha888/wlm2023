@@ -5,17 +5,57 @@
 REPLACE ALL hw13 TO hw<n> WITH MATCH CASE
 -->
 ```
+
+```{r opts, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+```
+
 ## Основные задания {#hw13_main}
+
+:::{.callout-note}
+### Данные
+
+Сегодня мы работаем с [датасетом про ноутбуки](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/hw13/laptop_price.csv), который содержит следующие переменные:
+
+* `Company` --- компания-производитель компьютера
+* `Product` --- бренд и модель
+* `TypeName` --- тип ноутбука (Notebook, Ultrabook, Gaming, etc.)
+* `Inches` --- размер экрана
+* `ScreenResolution` --- разрешение экрана
+* `Cpu` --- характеристики процессора
+* `Ram` --- размер оперативной памяти
+* `Memory` --- память жёсткого диска
+* `GPU` --- характеристики графического процессора
+* `OpSys` --- операционная система
+* `Weight` --- вес компьютера
+* `Price_euros` --- цена в Евро
+
+:::
 
 ### #1
 
 <img id="hw13-1-level" class="level"/>
 
 ::: {#hw13-1-task .task}
-Текст задания `переменная`.
+Загрузите [датасет](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/hw13/laptop_price.csv). Проверьте типы переменных. Если есть такие переменные, которые по своему содержанию должны быть другого типа, приведите их к нужному типу. Сделайте необходимые преобразования с переменными, если они потребуются.
 :::
 
-::: {#hw13-1-autocheck .autocheck}
+```{r}
+laptops <- read_csv("https://raw.githubusercontent.com/angelgardt/da-2023-ranepa/master/data/laptop_price.csv")
+str(laptops)
+
+laptops %>% 
+    mutate(Ram = Ram %>% str_remove("GB") %>% as.numeric(),
+           Weight = Weight %>% str_remove("kg") %>% as.numeric()) -> laptops
+```
+
+::: {#hw13-1-autocheck .autocheck hidden="true"}
 ::: {#hw13-1-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -31,25 +71,9 @@ REPLACE ALL hw13 TO hw<n> WITH MATCH CASE
 ::: hints-wrapper
 <details class="hints" id="hw13-1-hints">
 
-<summary>Подсказки</summary>
+<summary>Подсказка</summary>
 
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
+Обратите внимание, как записаны переменные `Ram` и `Weight`. Возможно, понадобится функция `str_remove()`.
 
 </details>
 :::
@@ -59,12 +83,14 @@ REPLACE ALL hw13 TO hw<n> WITH MATCH CASE
 <img id="hw13-2-level" class="level"/>
 
 ::: {#hw13-2-task .task}
-Текст задания.
 
-$$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
+Мы хотим узнать, от каких технических характеристик зависит цена ноутбука. Исследуйте взаимосвязи между ценой и характеристиками ноутбуков. Предположите, какие из характеристик могут быть включены в регрессионную модель в качестве предикторов цены.
+
+_Подойдут любые способы изучения закономерностей по типу расчета описательных статистик или визуализаций._
+
 :::
 
-::: {#hw13-2-autocheck .autocheck}
+::: {#hw13-2-autocheck .autocheck hidden="true"}
 ::: {#hw13-2-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -77,7 +103,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw13-2-hints">
 
 <summary>Подсказки</summary>
@@ -108,10 +134,14 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw13-3-level" class="level"/>
 
 ::: {#hw13-3-task .task}
-Текст задания.
+Постройте линейную модель `model1` со случайным интерсептом, которая позволит ответить на вопрос, как зависит цена компьютера от размера экрана. В качестве случайного эффекта включите в модель группировку по компании-производителю.
 :::
 
-::: {#hw13-3-autocheck .autocheck}
+```{r}
+model1 <- lmer(Price_euros ~ Inches + (1|Company), laptops)
+```
+
+::: {#hw13-3-autocheck .autocheck hidden="true"}
 ::: {#hw13-3-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -129,23 +159,9 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 <summary>Подсказки</summary>
 
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
+* Для построения смешанной модели используйте функцию `lmer()` из пакета `lme4` или `lmerTest`.
+* Фиксированные факторы вводятся в модель аналогично общим линейным моделям.
+* Случайные факторы вводятся модель с помощью синтаксиса `(1 + slope|rand)`, где `1` --- указание на случайный интерсепт, `slope` --- переменная, задающая случайный угловой коэффициент, `rand` --- группирующая переменная, задающая случайный фактор.
 
 </details>
 :::
@@ -155,12 +171,19 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw13-4-level" class="level"/>
 
 ::: {#hw13-4-task .task}
-Текст задания.
+Проверьте статистическую значимость модели `model1` в целом и статистистическую значимость фиксированных предикторов. Проинтерпретируйте полученные результаты.
 :::
+
+```{r}
+model0 <- lmer(Price_euros ~ 1 + (1|Company), laptops)
+anova(model0, model1, test = "Chi")
+summary(model1)
+anova(model1)
+```
 
 ::: {#hw13-4-autocheck .autocheck}
 ::: {#hw13-4-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ниже введите значение коэффициента при предикторе, округленное до сотых. В качестве десятичного разделителя используйте точку.
 :::
 
 <input class="autocheck-input" type="text" id="hw13-4" placeholder="Введите ответ…">
@@ -176,23 +199,9 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 <summary>Подсказки</summary>
 
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
+* Для тестирования гипотез о статистической значимости модели в целом необходима нулевая модель, в которой предиктором является только интерсепт, с такой же структурой случайных эффектов, как и в тестируемой модели.
+* Для тестирования значимости фиксированных факторов используются t-тесты Вальда или тесты отношения правдоподобий.
+* Лучше проверить статистическую значимость с помощью обоих тестов, чтобы иметь возможность в случае сомнений в точности тестов сопоставить их результаты.
 
 </details>
 :::
@@ -202,10 +211,15 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw13-5-level" class="level"/>
 
 ::: {#hw13-5-task .task}
-Текст задания.
+Включите в модель `model1` в качестве еще одного фиксированного *количественного* предиктора размер оперативной памяти ноутбука (`Ram`) --- создайте новую модель `model2`.
 :::
 
-::: {#hw13-5-autocheck .autocheck}
+```{r}
+laptops$Ram %>% unique()
+model2 <- lmer(Price_euros ~ Inches + Ram + (1|Company), laptops)
+```
+
+::: {#hw13-5-autocheck .autocheck hidden="true"}
 ::: {#hw13-5-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -218,7 +232,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw13-5-hints">
 
 <summary>Подсказки</summary>
@@ -249,12 +263,16 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw13-6-level" class="level"/>
 
 ::: {#hw13-6-task .task}
-Текст задания.
+Сравните две имеющиеся модели --- с одним (`model1`) и двумя (`model2`) фиксированными предикторами. Проинтерпретируйте результаты.
 :::
+
+```{r}
+anova(model1, model2, test = "Chi")
+```
 
 ::: {#hw13-6-autocheck .autocheck}
 ::: {#hw13-6-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки введите значение статистики использованного теста, округленное до сотых. В качестве десятичного разделителя используйте точку.
 :::
 
 <input class="autocheck-input" type="text" id="hw13-6" placeholder="Введите ответ…">
@@ -268,25 +286,9 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 ::: hints-wrapper
 <details class="hints" id="hw13-6-hints">
 
-<summary>Подсказки</summary>
+<summary>Подсказка</summary>
 
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
+Обратите внимание на способ подбора моделей --- так как модели различаются структурой фиксированной части, нас интересуют точные оценки их коэффициентов.
 
 </details>
 :::
@@ -296,12 +298,18 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw13-7-level" class="level"/>
 
 ::: {#hw13-7-task .task}
-Текст задания.
+Протестируйте статистическую значимость предикторов модели с двумя фиксированными предикторами (`model2`). Проинтерпретируйте результаты. Сравните с результатами тестирования значимости предикторов модели с одним фиксированным предиктором. 
+
+Почему так могло произойти?
 :::
+
+```{r}
+summary(model2)
+```
 
 ::: {#hw13-7-autocheck .autocheck}
 ::: {#hw13-7-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ниже введите значение коэффициента при предикторе `Inches`, округленное до сотых. В качестве десятичного разделителя используйте точку.
 :::
 
 <input class="autocheck-input" type="text" id="hw13-7" placeholder="Введите ответ…">
@@ -315,25 +323,9 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 ::: hints-wrapper
 <details class="hints" id="hw13-7-hints">
 
-<summary>Подсказки</summary>
+<summary>Подсказка</summary>
 
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
+При сопоставлении результатов тестирования гипотез двух моделей обратите внимание (1) на статистическую значимость и (2) на значение коэффициентов при предикторах.
 
 </details>
 :::
@@ -343,12 +335,23 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw13-8-level" class="level"/>
 
 ::: {#hw13-8-task .task}
-Текст задания.
+a. Усложните случайную часть модели. Возьмите за основу имеющуюся модель с двумя фиксированными предикторами и добавьте ещё один случайный интерсепт по переменной `TypeName`. Создайте модель `model3`.
+
+b. Протестируйте статистическую значимость фиксированных предикторов. Проинтерпретируйте результаты. Если есть что-либо необычное в результатах тестирования, дайте комментарий, почему это могло произойти.
 :::
+
+```{r}
+## a
+laptops$TypeName %>% unique()
+model3 <- lmer(Price_euros ~ Inches + Ram + (1|Company) + (1|TypeName), laptops)
+
+## b
+summary(model3)
+```
 
 ::: {#hw13-8-autocheck .autocheck}
 ::: {#hw13-8-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ниже введите значение коэффициента при предикторе `Inches`, округленное до сотых. В качестве десятичного разделителя используйте точку.
 :::
 
 <input class="autocheck-input" type="text" id="hw13-8" placeholder="Введите ответ…">
@@ -364,23 +367,13 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 <summary>Подсказки</summary>
 
-<details class="hint">
+* Синтаксис модели с двумя случайными интерсептами выглядит следующим образом:
 
-<summary>Как делать задание?</summary>
+```{r, echo=TRUE, eval=FALSE}
+model <- lmer(DV ~ IV1 + IV2 + (1|rand1) + (1|rand2), data = data)
+```
 
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
+* При сопоставлении результатов тестирования гипотез двух моделей обратите внимание (1) на статистическую значимость и (2) на значение коэффициентов при предикторах.
 
 </details>
 :::
@@ -390,12 +383,16 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw13-9-level" class="level"/>
 
 ::: {#hw13-9-task .task}
-Текст задания.
+Сравните модели с двумя фиксированными предикторами друг с другом (`model2` и `model3`). Проинтерпретируйте результаты.
 :::
+
+```{r}
+anova(model2, model3, test = "Chi", refit = FALSE)
+```
 
 ::: {#hw13-9-autocheck .autocheck}
 ::: {#hw13-9-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки введите значение статистики использованного теста, округленное до сотых. В качестве десятичного разделителя используйте точку.
 :::
 
 <input class="autocheck-input" type="text" id="hw13-9" placeholder="Введите ответ…">
@@ -409,25 +406,9 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 ::: hints-wrapper
 <details class="hints" id="hw13-9-hints">
 
-<summary>Подсказки</summary>
+<summary>Подсказка</summary>
 
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
+Обратите внимание на способ подбора моделей --- так как у моделей одинаковая фиксированная часть, нас интересует тестирование гипотез о случайной части модели.
 
 </details>
 :::
@@ -437,10 +418,24 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw13-10-level" class="level"/>
 
 ::: {#hw13-10-task .task}
-Текст задания.
+Проведите диагностику модели `model3`. Сделайте заключение о качестве модели на основе результатов диагностики.
 :::
 
-::: {#hw13-10-autocheck .autocheck}
+```{r}
+res <- tibble(
+  laptops,
+  fitted = fitted(model3),
+  resid = resid(model3, type = 'pearson'),
+  sresid = resid(model3, type = 'pearson', scaled = TRUE)
+)
+gg_res <- ggplot(res, aes(y = sresid)) +
+  geom_hline(yintercept = 0)
+gg_res + geom_point(aes(x = fitted))
+gg_res + geom_boxplot(aes(x = Company))
+gg_res + geom_boxplot(aes(x = TypeName))
+```
+
+::: {#hw13-10-autocheck .autocheck hidden="true"}
 ::: {#hw13-10-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -458,27 +453,13 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 <summary>Подсказки</summary>
 
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
+* Так как в модели в качестве фиксированных эффектов включены только количественные предикторы, при изучении распределения остатков достаточно посмотреть из зависимость от предсказанных значений.
+* Однако в модель включены два случайных эффекта --- поэтому полезно будет рассмотреть зависимость распределения остатков от каждого из них.
 
 </details>
 :::
 
+<!---
 ## Дополнительные задания {#hw13_add}
 
 ### #1
@@ -715,6 +696,8 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 </details>
 :::
+
+--->
 
 ```{=html}
 <!--- CHANGE hw13 TO hw<n> IN THE LINES BELOW--->
