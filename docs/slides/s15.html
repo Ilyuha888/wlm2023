@@ -365,7 +365,7 @@ link.href = 'pics/favicon.png';
 <ul>
 <li>проверка теоретических моделей на эмпирических данных</li>
 <li>особенности методов структурного моделирования</li>
-<li>принципы работы результатам конфирматорного факторного анализа</li>
+<li>принципы работы с результатами конфирматорного факторного анализа</li>
 </ul>
 </section>
 <section id="структурное-моделирование" class="slide level2">
@@ -376,16 +376,21 @@ link.href = 'pics/favicon.png';
 </figure>
 </center>
 <ul>
-<li>structural equation modelling, SEM)</li>
+<li>structural equation modelling, SEM</li>
 <li>два шага:
 <ul>
-<li>задание теоретической модели генерации данных</li>
+<li>задание теоретической модели</li>
 <li>проверка того, насколько предложенная модель хорошо подходит под наши данные</li>
 </ul></li>
 </ul>
 </section>
 <section id="особенность-sem" class="slide level2">
 <h2>Особенность SEM</h2>
+<center>
+<figure>
+<img src="pics/sem-model.jpg">
+</figure>
+</center>
 <ul>
 <li>в модель включаются <strong>латентные переменные</strong></li>
 <li>в модель могут быть включены <strong>косвенные связи</strong></li>
@@ -409,9 +414,13 @@ link.href = 'pics/favicon.png';
 </figure>
 </center>
 <ul>
-<li><strong>измерения</strong> — связи от наблюдаемых переменных к латентным (наблюдаемые → латентные)</li>
-<li><strong>регрессии</strong> — связи от латентных переменны к наблюдаемым (латентные → наблюдаемые)</li>
-<li>и <strong>корреляции</strong> — связи между наблюдаемыми и латентными переменными (наблюдаемые → наблюдаемые, латентные → латентные)</li>
+<li><strong>измерения</strong> — латентные → наблюдаемые</li>
+<li><strong>корреляции</strong> — наблюдаемые → наблюдаемые, латентные → латентные</li>
+<li><strong>остатки</strong> — то, что не удалось смоделировать</li>
+</ul>
+<p>В SEM ещё и</p>
+<ul>
+<li><strong>регрессии</strong> — наблюдаемые → латентные</li>
 </ul>
 </section>
 <section id="вопросы-конфирматорного-факторного-анализа" class="slide level2">
@@ -469,6 +478,43 @@ link.href = 'pics/favicon.png';
 </tbody>
 </table>
 </section>
+<section id="изучение-параметров-модели" class="slide level2">
+<h2>Изучение параметров модели</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Связь</th>
+<th style="text-align: left;">Оценка параметра</th>
+<th style="text-align: left;">SE</th>
+<th style="text-align: left;">z</th>
+<th style="text-align: left;">p</th>
+<th style="text-align: left;">Доверительный интервал</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">F1 =~ q1</td>
+<td style="text-align: left;">0.787</td>
+<td style="text-align: left;">0.020</td>
+<td style="text-align: left;">39.421</td>
+<td style="text-align: left;">0.000</td>
+<td style="text-align: left;">[0.748, 0.827]</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">F1 ~~ F2</td>
+<td style="text-align: left;">0.674</td>
+<td style="text-align: left;">0.032</td>
+<td style="text-align: left;">21.123</td>
+<td style="text-align: left;">0.000</td>
+<td style="text-align: left;">[0.611, 0.736]</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>измерения, корреляции, остатки</li>
+<li>собственно оценки параметров и их статистическая значимость</li>
+</ul>
+</section>
 <section id="модификация-модели" class="slide level2">
 <h2>Модификация модели</h2>
 <ul>
@@ -483,7 +529,14 @@ link.href = 'pics/favicon.png';
 <blockquote>
 <p><strong>Так делать не надо.</strong> <strong>Это p-hacking.</strong></p>
 </blockquote>
-<p>Как с ними работать?</p>
+</section>
+<section id="как-работать-с-индексами-модификации" class="slide level2">
+<h2>Как работать с индексами модификации?</h2>
+<center>
+<figure>
+<img src="pics/cfa-model-0.jpg">
+</figure>
+</center>
 <ul>
 <li>изучить индексы модификации и выявить связи с наибольшими индексами модификации</li>
 <li>попробовать найти теоретическое основание таких связей</li>
@@ -491,6 +544,11 @@ link.href = 'pics/favicon.png';
 <li>собрать новые данные</li>
 <li>проверить обновленную модель на новых данных</li>
 </ul>
+<center>
+<figure>
+<img src="pics/cfa-model-1.jpg">
+</figure>
+</center>
 </section>
 <section id="сравнение-моделей" class="slide level2">
 <h2>Сравнение моделей</h2>

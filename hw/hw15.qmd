@@ -7,17 +7,46 @@ REPLACE ALL hw15 TO hw<n> WITH MATCH CASE
 ```
 ## Основные задания {#hw15_main}
 
+:::{.callout-note}
+
+## Данные
+
+Сегодня мы работает с датасетом по Большой пятерке (Big Five). Вспомнить структуру модели можно [тут](https://en.wikipedia.org/wiki/Big_Five_personality_traits).
+
+<center>
+<figure>
+<img src="pics/big_five_eng.png" width="100%">
+</figure>
+</center>
+
+Данные собирались с помощью опросника Big-Five Factor Markers. 
+На измерение каждого фактора в опроснике отведено по десять утверждений --- с этими переменными мы будем работать:
+
+* `EXT1`--`EXT10` --- extraversion
+* `EST1`--`EST10` --- neuroticism (emotional stability)
+* `AGR1`--`AGR10` --- agreeableness
+* `CSN1`--`CSN10` --- conscientiousness
+* `OPN1`--`OPN10` --- openness
+
+Подробное описание датасета можно найти в [этом файле](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/hw15/big_five_bffm_codebook.txt).
+
+[Оригинальный датасет](https://www.kaggle.com/tunguz/big-five-personality-test) содержит 1 015 342 наблюдения --- это очень много, возможно, не хватит оперативной памяти, поэтому мы будем работать [с его частью](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/hw15/bffm.csv).
+
+:::
+
 ### #1
 
 <img id="hw15-1-level" class="level"/>
 
 ::: {#hw15-1-task .task}
-Текст задания `переменная`.
+a. Загрузите данные. Проверьте их структуру и типы переменных.
+b. При необходимости скорректируйте типы переменных.
+c. Если в данных есть пропущенные значения или они возникли в ходе предобработки, удалите их из датасета.
 :::
 
 ::: {#hw15-1-autocheck .autocheck}
 ::: {#hw15-1-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ниже введите количество строк в датасете, получившемся после предобработки (корректировки типов переменных и удаления пропущенных значений).
 :::
 
 <input class="autocheck-input" type="text" id="hw15-1" placeholder="Введите ответ…">
@@ -33,23 +62,9 @@ REPLACE ALL hw15 TO hw<n> WITH MATCH CASE
 
 <summary>Подсказки</summary>
 
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
+* Обратите внимание на структуру файла с данными, в особенности на разедлитель колонок, который в нем используется.
+* При предобработке данных может пригодится функция `across()`, которая позволяет выделить колонки, по которым необходимо провести предобработку.
+* Возможно, полезно будет вспомнить регулярные выражения для отбора необходимых колонок.
 
 </details>
 :::
@@ -59,12 +74,14 @@ REPLACE ALL hw15 TO hw<n> WITH MATCH CASE
 <img id="hw15-2-level" class="level"/>
 
 ::: {#hw15-2-task .task}
-Текст задания.
+a. Отберите переменные для анализ --- пункты опросника (`EXT1`--`EXT10`, `EST1`--`EST10`, `AGR1`--`AGR10`, `CSN1`--`CSN10`, `OPN1`--`OPN10`).
+b. Постройте и визуализируйте корреляционную матрицу по отобранным переменным.
 
-$$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
+Есть ли нечто странное в данных?
+
 :::
 
-::: {#hw15-2-autocheck .autocheck}
+::: {#hw15-2-autocheck .autocheck hidden="true"}
 ::: {#hw15-2-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -82,23 +99,8 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 <summary>Подсказки</summary>
 
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
+* Обратите внимание на силу корреляций, а также на их направление.
+* С чем это может быть связано, если мы предполагаем, что опросник хорошо сконструирован и его психометрические показали достаточно высокие?
 
 </details>
 :::
@@ -108,10 +110,12 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw15-3-level" class="level"/>
 
 ::: {#hw15-3-task .task}
-Текст задания.
+Скорректируйте странности, обнаруженные по корреляционной матрице.
+
+*Вероятно, поможет [матрица направлений вопросов](https://raw.githubusercontent.com/angelgardt/wlm2023/master/data/hw15/direction_matrix_bffm.csv).*
 :::
 
-::: {#hw15-3-autocheck .autocheck}
+::: {#hw15-3-autocheck .autocheck hidden="true"}
 ::: {#hw15-3-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -129,23 +133,14 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 <summary>Подсказки</summary>
 
-<details class="hint">
+Подойти к задаче перекодировки можно следующим образом:
 
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
+* Загрузить матрицу направлений вопросов
+* Объединить направления и баллы по соответствующим вопросам
+* Максимальный возможный балл по одному вопросу --- 6
+    * Если вопрос обратный, то необходимо из 6 вычесть балл респондента
+    * Если вопрос прямой, оставить кодировку без изменений
+* В ходе преобразований для объединения тибблов потребуется перевести из в длинных формат, а затем итоговый датасет вновь перевести в широкий формат, чтобы функции работали на нем корректно.
 
 </details>
 :::
@@ -155,10 +150,10 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw15-4-level" class="level"/>
 
 ::: {#hw15-4-task .task}
-Текст задания.
+Выполните анализ главных компонент на имеющихся данных. Стандартизируйте переменные перед проведением анализа.
 :::
 
-::: {#hw15-4-autocheck .autocheck}
+::: {#hw15-4-autocheck .autocheck hidden="true"}
 ::: {#hw15-4-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -171,7 +166,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw15-4-hints">
 
 <summary>Подсказки</summary>
@@ -202,12 +197,14 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw15-5-level" class="level"/>
 
 ::: {#hw15-5-task .task}
-Текст задания.
+Постройте график, отображающий информативность главных компонент.
+
+Сколько получается главных компонент, согласно критерию информативности?
 :::
 
 ::: {#hw15-5-autocheck .autocheck}
 ::: {#hw15-5-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ниже введите число информативных главных компонент.
 :::
 
 <input class="autocheck-input" type="text" id="hw15-5" placeholder="Введите ответ…">
@@ -223,23 +220,8 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 <summary>Подсказки</summary>
 
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
+* В качестве меры информативности главной компоненты используйте стандартное отклонение по ней.
+* Главная компонента считается неинформативной, если её дисперсии меньше дисперсии исходных переменных.
 
 </details>
 :::
@@ -249,12 +231,14 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw15-6-level" class="level"/>
 
 ::: {#hw15-6-task .task}
-Текст задания.
+Постройте график, отображающий накопленную долю объясненной главными компонентами дисперсии данных.
+
+Сколько главных компонент достаточно для объяснения 80% дисперсии данных?
 :::
 
 ::: {#hw15-6-autocheck .autocheck}
 ::: {#hw15-6-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ниже введите число главных компонент, достаточное для объяснения 80% дисперсии данных.
 :::
 
 <input class="autocheck-input" type="text" id="hw15-6" placeholder="Введите ответ…">
@@ -265,7 +249,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw15-6-hints">
 
 <summary>Подсказки</summary>
@@ -296,12 +280,12 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw15-7-level" class="level"/>
 
 ::: {#hw15-7-task .task}
-Текст задания.
+Проверьте с помощью критерия сферичности Бартлетта и меры Кайзер-Мейера-Олкина (КМО), насколько имеющиеся данные подходят для эксплораторного факторного анализа.
 :::
 
 ::: {#hw15-7-autocheck .autocheck}
 ::: {#hw15-7-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ниже введите через запятую значение статистики критерия сферичности Бартлетта и значение меры КМО (overall), округленные до десятых. В качестве десятичного разделителя используйте точку.
 :::
 
 <input class="autocheck-input" type="text" id="hw15-7" placeholder="Введите ответ…">
@@ -312,7 +296,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw15-7-hints">
 
 <summary>Подсказки</summary>
@@ -343,12 +327,12 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw15-8-level" class="level"/>
 
 ::: {#hw15-8-task .task}
-Текст задания.
+Выясните, сколько факторов присутствует в латентной структуре данных, с помощью параллельного анализа.
 :::
 
 ::: {#hw15-8-autocheck .autocheck}
 ::: {#hw15-8-ir .input-requirements}
-Описание формата инпута.
+Для самопроверки в поле ниже введите количества факторов, выявленных с помощью параллельного анализа.
 :::
 
 <input class="autocheck-input" type="text" id="hw15-8" placeholder="Введите ответ…">
@@ -359,7 +343,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw15-8-hints">
 
 <summary>Подсказки</summary>
@@ -390,10 +374,16 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw15-9-level" class="level"/>
 
 ::: {#hw15-9-task .task}
-Текст задания.
+Постройте две модели ЭФА:
+
+* первая должна содержать столько факторов, сколько предполагает теоретическая модель личностных черт
+* вторая должна содержать столько факторов, сколько предполагают результаты параллельного анализа
+
+Сравните полученные решения с точки зрения (a) уникальностей, (б) распределения переменных по фактором (факторных нагрузок), (в) доли объясненной дисперсии.
+
 :::
 
-::: {#hw15-9-autocheck .autocheck}
+::: {#hw15-9-autocheck .autocheck hidden="true"}
 ::: {#hw15-9-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -411,23 +401,8 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 <summary>Подсказки</summary>
 
-<details class="hint">
-
-<summary>Как делать задание?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Что надо сделать?</summary>
-
-</details>
-
-<details class="hint">
-
-<summary>Ответ неверный</summary>
-
-</details>
+* Ожидается, что вопросы, относящиеся теоретически к одному конструкту будут иметь высокие нагрузки на один из факторов, и низкие на все остальные.
+* Высокие уникальности свидетельсвуют о том, что переменная плохо объясняется факторами, то есть плохо вписываются в построенную модель.
 
 </details>
 :::
@@ -437,10 +412,12 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 <img id="hw15-10-level" class="level"/>
 
 ::: {#hw15-10-task .task}
-Текст задания.
+Постройте две модели КФА, в которых количества факторов соответствует теоретической модели личностных черт. В первой модели используйте метод вращения *promax*, во второй --- *oblimin*.
+
+Сравните результаты, полученные с помощью наклонных вращений с результатами, полученными в предыдущем задании с точки зрения (a) уникальностей, (б) распределения переменных по фактором (факторных нагрузок), (в) доли объясненной дисперсии.
 :::
 
-::: {#hw15-10-autocheck .autocheck}
+::: {#hw15-10-autocheck .autocheck hidden="true"}
 ::: {#hw15-10-ir .input-requirements}
 Описание формата инпута.
 :::
@@ -453,7 +430,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 :::
 :::
 
-::: hints-wrapper
+::: {.hints-wrapper hidden="true"}
 <details class="hints" id="hw15-10-hints">
 
 <summary>Подсказки</summary>
@@ -479,6 +456,7 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 </details>
 :::
 
+<!---
 ## Дополнительные задания {#hw15_add}
 
 ### #1
@@ -715,6 +693,8 @@ $$\sin^2{\alpha} + \cos^2{\alpha} = 1$$
 
 </details>
 :::
+
+---> 
 
 ```{=html}
 <!--- CHANGE hw15 TO hw<n> IN THE LINES BELOW--->
