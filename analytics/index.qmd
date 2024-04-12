@@ -14,7 +14,9 @@ format:
 knitr::opts_chunk$set(echo=FALSE, 
                       message=FALSE, 
                       eval=TRUE,
-                      warning=FALSE)
+                      warning=FALSE,
+                      cache = FALSE
+                      )
 ```
 
 
@@ -29,14 +31,17 @@ knitr::opts_chunk$set(echo=FALSE,
 
 
 ## Libraries
-```{r pkgs}
+```{r pkgs, cache=FALSE}
 library(rytstat)
 library(googlesheets4)
 library(rgoogleclassroom)
 library(tidyverse)
+library(plotly)
+```
+
+```{r ggplot-theme, cache=FALSE}
 theme_set(theme_bw())
 theme_update(legend.position = "bottom")
-library(plotly)
 ```
 
 ```{r auth}
@@ -70,7 +75,9 @@ hw_spec <- read_sheet("https://docs.google.com/spreadsheets/d/1iCy8MDz-ER95OfylV
 ## quizes
 q_sp <- read_sheet("https://docs.google.com/spreadsheets/d/1iCy8MDz-ER95OfylV-xAY6lIxfbCZiHq5NM3i4smm5M/edit?usp=sharing",
                      sheet = "Q") %>% 
-  select(task_code, level, max_score)
+  filter(!is.na(task_code))
+q_nulls <- read_sheet("https://docs.google.com/spreadsheets/d/1iCy8MDz-ER95OfylV-xAY6lIxfbCZiHq5NM3i4smm5M/edit?usp=sharing",
+                     sheet = "Q_NULLS")
 ```
 
 ### Calendar
@@ -108,7 +115,7 @@ journal %>%
 pr_journal %>% 
   filter(Stream == "main") %>% 
   summarise(n = n()) %>% 
-  .$n -> n_partic
+  pull(n) -> n_partic
 
 ## practice presence
 pr_journal %>% 
@@ -161,7 +168,7 @@ hw_journal %>%
   pivot_longer(cols = -c(ID, Stream),
                names_to = "hw",
                values_to = "score") %>% 
-  filter(score == "NS") %>% 
+  filter(score != "NS") %>% 
   group_by(hw) %>% 
   summarise(n = n()) -> hws_ns
 
@@ -227,6 +234,22 @@ hw_tsks %>%
 #       full_join(q_scores, join_by(ID)) -> q_scores
 #   }
 # }
+
+
+
+
+## J project
+
+read_sheet("https://docs.google.com/spreadsheets/d/1mNT6A3qJTnS5EXQJg6MKFNinRqOVmrGErMZdrfsN9To/edit?usp=sharing",
+           sheet = "J", col_types = "c") %>% 
+  anti_join(journal %>% 
+              select(Stream, ID) %>% 
+              filter(Stream == "test"),
+            join_by(ID)
+  ) -> j_journal
+
+
+## F project
 
 ```
 
@@ -329,11 +352,11 @@ basics_by_videos %>%
 
 ### Classroom
 
-```{r get-classroom-data, eval=FALSE}
+```{r get-classroom-data}
 get_course_list() %>% 
   .$courses %>% 
   filter(name == "WLM 2023 // HSE UX LAB") %>% 
-  .$id -> course_id
+  pull(id) -> course_id
 
 get_coursework_list(course_id)$courseWork %>% 
   select(id, title) %>%
@@ -362,43 +385,191 @@ tibble(
 
 # get_coursework_properties(course_id, coursework_id)
 # get_form_properties(form_id = NULL, form_url = NULL)
+```
 
+```{r quizzes-preproc}
+q_props <- list()
+for(i in 1:15) {
+  get_form_properties(form_url = q_links$link[i]) %>% 
+    .$items %>% 
+    mutate(code = paste0("Q", i)) -> q_props[[i]]
+}
+
+q_resps <- list()
+for(i in 1:15) {
+  get_form_responses(form_url = q_links$link[i])$responses %>% 
+    filter(month(as_date(lastSubmittedTime)) > 10 | year(as_date(lastSubmittedTime)) > 2023) %>% 
+    mutate(code = paste0("Q", i))-> q_resps[[i]]
+}
+
+q_resps %>% 
+  map(function(x) {x %>% select(responseId, totalScore, lastSubmittedTime, code)}) -> q_ts
+
+q_total_scores <- tibble()
+for (i in 1:length(q_ts)) {
+  q_ts[[i]] %>% 
+    bind_rows(q_total_scores) -> q_total_scores
+}
+
+q_ts %>% 
+  map(function(x) nrow(x)) %>% 
+  as_tibble(.name_repair = "universal") %>% 
+  rename_with(str_replace_all, pattern = "\\.\\.\\.", replacement = "Q") %>% 
+  pivot_longer(cols = everything(),
+               names_to = "code", 
+               values_to = "n") -> q_n
+```
+
+```{r q-task-export, eval=FALSE}
+# q_tasks <- tibble()
+# for (i in 1:length(q_props)) {
+#   q_props[[i]] %>% 
+#     select(itemId, title, code) %>% 
+#     slice(-1) %>% 
+#     bind_rows(q_tasks) -> q_tasks
+# }
+# q_tasks %>% write_sheet("https://docs.google.com/spreadsheets/d/1iCy8MDz-ER95OfylV-xAY6lIxfbCZiHq5NM3i4smm5M/edit?usp=sharing",
+#                         sheet = "Q")
+
+# q_questions <- tibble()
+# for (i in 1:length(q_props)) {
+#   q_props[[i]]$questionItem$question %>% 
+#     select(questionId) %>% 
+#     mutate(code = paste0("Q", i)) %>% 
+#     slice(-1) %>% 
+#     bind_rows(q_questions) -> q_questions
+# }
+# q_questions %>% write_sheet("https://docs.google.com/spreadsheets/d/1iCy8MDz-ER95OfylV-xAY6lIxfbCZiHq5NM3i4smm5M/edit?usp=sharing",
+#                             sheet = "Q_questions")
+```
+
+```{r q-fix, eval=FALSE}
+# q_props[[1]]$questionItem$question$grading
+# q_props[[1]]$questionItem$question %>% select(questionId)
+# q_resps[[1]]$answers[[2]]$grade
+# q_resps[[1]]
+# 
+# q_props[[1]] %>% str()
+# q_resps[[1]]$answers$`430dd10a`$grade$correct
+# 
+# (q_resps[[7]]$answers %>% names())[
+#   !(q_resps[[7]]$answers %>% names()) %in% (q_props[[7]]$questionItem$question %>% select(questionId) %>% pull(questionId))
+# ]
+# 
+# #  "57cc894c" "45438f30" "7e2f5172" "0cef7aff" "400b60f4" "704c90b2" "6d08b363"
+# q_resps[[13]]$answers$`57cc894c`$textAnswers$answers %>% unlist()
+```
+
+```{r quizzes-spec-preproc}
 ## quiz specification preprocess
 q_sp %>% 
-  mutate(code = task_code %>% 
-           str_extract("^q\\d+") %>% 
-           toupper(),
-         task = task_code %>% 
-           str_extract("\\d+$") %>% 
-           factor(ordered = TRUE,
-                  levels = as.character(1:20)),
-         level = level %>% 
-           factor(ordered = TRUE,
-                  levels = c("easy", "medium", "hard", "extreme"))) -> q_spec
-
-q_spec %>% 
-  group_by(code) %>% 
-  summarise(max_total_score = sum(max_score)) -> q_max_total_scores
+  summarise(max_total_score = sum(max_score),
+            .by = code) -> q_max_total_score
 
 ### quizes preproc
-source("scripts/q-preproc/q1_preproc.R")
-source("scripts/q-preproc/q2_preproc.R")
+# source("scripts/q-preproc/q1_preproc.R")
+# source("scripts/q-preproc/q2_preproc.R")
 
 
-q1_total_scores %>% 
-  bind_rows(q2_total_scores) %>% 
-  left_join(q_max_total_scores,
-            join_by(code)) %>% 
-  mutate(lastSubmittedTime = as_datetime(lastSubmittedTime),
-         totalScore100 = (totalScore / max_total_score * 100) %>% round()) %>% 
-  filter(month(lastSubmittedTime) > 10) -> q_total_scores
+# map(
+#   q_resps[[4]]$answers,
+#   function(x) x$grade$correct
+# ) %>% enframe() %>% unnest("value", keep_empty = TRUE) %>% filter(name == "410b5ff6")
 
-q1_item_score %>% 
-  bind_rows(q2_item_score) -> q_item_scores
+# map(
+#   q_resps[[2]]$answers[-1],
+#   function(x) x$grade$correct
+# ) %>% 
+#   as_tibble() %>% 
+#   mutate(responseId = q_resps[[1]]$responseId,
+#          code = q_resps[[1]]$code) %>% 
+#   pivot_longer(cols = -c(responseId, code),
+#                names_to = "questionId",
+#                values_to = "correct") %>% 
+#   replace_na(list(correct = FALSE))
+#   
+#   
+# map(
+#   q_resps[[7]]$answers[-17],
+#   function(x) x$grade$correct
+# ) %>% as_tibble() %>% select("0621265c")
 
-
+# q1_total_scores %>% 
+#   bind_rows(q2_total_scores) %>% 
+#   left_join(q_max_total_scores,
+#             join_by(code)) %>% 
+#   mutate(lastSubmittedTime = as_datetime(lastSubmittedTime),
+#          totalScore100 = (totalScore / max_total_score * 100) %>% round()) %>% 
+#   filter(month(lastSubmittedTime) > 10) -> q_total_scores
+# 
+# q1_item_score %>% 
+#   bind_rows(q2_item_score) -> q_item_scores
 
 # get_form_responses(form_url = q_links$link[15]) -> q15
+
+
+q_questions <- tibble()
+for (i in 1:15) {
+  q_resps[[i]]$answers -> current_ans
+  map(
+    current_ans[!names(current_ans) %in% (q_nulls %>% filter(code == paste0("Q", i)) %>% pull(questionId))],
+    function(x) x$grade$correct
+    ) %>% 
+    as_tibble() %>% 
+    mutate(responseId = q_resps[[i]]$responseId,
+           code = q_resps[[i]]$code) %>% 
+    pivot_longer(cols = -c(responseId, code),
+                 names_to = "questionId",
+                 values_to = "correct") %>% 
+    replace_na(list(correct = FALSE)) %>% 
+    bind_rows(q_questions) -> q_questions
+}
+
+nrow(q_questions)
+nrow(q_sp)
+
+q_sp %>% 
+  filter(!is.na(questionId)) %>% # nrow()
+  separate(questionId, into = paste0("questionId", 1:7), sep = "\n") %>% 
+  pivot_longer(cols = paste0("questionId", 1:7),
+               names_to = "questionId_num", values_to = "questionId") %>% 
+  filter(!is.na(questionId)) %>% 
+  # full_join(q_questions, ## produce NA from buged questions q14_3 & q4_6
+  #           join_by(code, questionId)) %>% # View()
+  right_join(q_questions,
+             join_by(code, questionId)) %>% # View()
+  # nrow()
+  # pull(max_score) %>% is.na() %>% sum()
+  # pull(correct) %>% is.na() %>% sum()
+  # filter(is.na(correct))
+  group_by(code, responseId, itemId, task_code) %>% 
+  summarise(score = sum(correct)) %>% 
+  full_join(
+    q_sp %>% select(task_code, max_score),
+    join_by(task_code)
+  ) %>% # nrow()
+  full_join(q_total_scores %>% select(code, responseId, totalScore),
+            join_by(code, responseId)) -> q_questions_full
+
+q_questions_full %>% # sapply(is.na) %>% apply(2, sum)
+  filter(!is.na(code)) %>% 
+  ungroup() %>% 
+  group_by(code, task_code) %>% 
+  summarise(mean_score = mean(score)) %>% # nrow()
+  left_join(q_sp %>% select(code, task_code, max_score),
+            join_by(code, task_code)) %>% 
+  mutate(difficulty = mean_score / max_score) -> q_difficulty
+
+q_questions_full %>% # sapply(is.na) %>% apply(2, sum)
+  filter(!is.na(code)) %>% 
+  ungroup() %>% 
+  group_by(code, task_code) %>% 
+  summarise(discrimination = cor(score, totalScore)) %>% 
+  replace_na(list(discrimination = 0)) -> q_discrimination
+
+q_discrimination %>% 
+  full_join(q_difficulty %>% select(code, task_code, difficulty),
+            join_by(code, task_code)) -> q_psymet_props
 ```
 
 ```{r get-aesthetics}
@@ -410,6 +581,144 @@ aesth <- yaml::read_yaml("aesthetics.yml")
 
 
 
+
+# Метрики
+
+```{r merics}
+journal %>% 
+  filter(Stream == "main") %>% 
+  select(ID, Stream, matches("^HW\\d|^P\\d|^Q\\d|^C\\d|^J$|^F$")) %>% 
+  pivot_longer(cols = -c(ID, Stream),
+               names_to = "code") %>% 
+  separate(code, into = c("code", "part"), sep = "-") %>% 
+  mutate(value = as.numeric(value)) %>% 
+  summarise(done = sum(value, na.rm = TRUE) > 0,
+            .by = c(ID, code)) %>% 
+  summarise(n = sum(done),
+            .by = code) -> n_activities
+
+calendar %>% 
+  select(date, week, block, code_1, code_2) %>% 
+  filter(week != "—" & 
+           week != "0" &
+           code_1 != code_2) %>% 
+  pivot_longer(cols = -c(date, week, block), 
+               values_to = "code") %>% 
+  filter(code != "—") %>% 
+  right_join(n_activities,
+             join_by(code)) -> n_activities_weeks_blocks
+
+n_activities_weeks_blocks %>% 
+  summarise(n_retention = max(n),
+            .by = week) %>% 
+  mutate(`Absolute Retention` = round(n_retention / n_partic * 100, 2)) %>% 
+  filter(week != 7) %>% 
+  mutate(previous_n_retention = lag(n_retention),
+         `Relative Retention` = round(n_retention / previous_n_retention * 100, 2)) -> retention_weeks
+
+retention_weeks %>% 
+  filter(week == 1) %>% 
+  select(week, `Absolute Retention`) -> activation
+
+retention_weeks %>% 
+  filter(week == "21–22") %>% 
+  select(week, `Absolute Retention`) -> completion
+
+n_activities_weeks_blocks %>% 
+  summarise(n_retention = max(n),
+            .by = block) %>% 
+  mutate(previous_n_retention = lag(n_retention),
+         `Absolute Retention` = round(n_retention / n_partic * 100, 2),
+         `Relative Retention` = round(n_retention / previous_n_retention * 100, 2)) %>% 
+  filter(!is.na(block)) -> retention_blocks
+```
+
+
+## Row
+
+```{r}
+#| content: valuebox
+#| title: "Activation"
+list(
+  icon = "check",
+  color = "#9AEBC6",
+  value = paste0(activation$`Absolute Retention`, "%")
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "Completion Rate"
+list(
+  icon = "trophy",
+  color = "#95B4F5",
+  value = paste0(completion$`Absolute Retention`, "%")
+)
+```
+
+
+## Row
+```{r retention-weeks}
+retention_weeks %>% pull(week) -> weeks
+retention_weeks %>% 
+  pivot_longer(cols = c(`Absolute Retention`, `Relative Retention`)) %>% 
+  mutate(week = factor(week, 
+                          ordered = TRUE,
+         levels = weeks)) %>% 
+  ggplot(aes(week, value, color = name)) +
+  geom_point() +
+  geom_line(aes(group = name)) +
+  # scale_color_discrete(labels = c(rel_retention = "Относительное удержание",
+  #                                 abs_retention = "Абcолютное удержание")) +
+  # geom_point(data = activation,
+  #            aes(week, `Absolute Retention`),
+  #            size = 2, color = "green3") +
+  # geom_point(data = completion,
+  #            aes(week, `Absolute Retention`),
+  #            size = 2, color = "blue3") +
+  labs(title = "Retention // Недели",
+       x = "Неделя", y = "Процент",
+       color = "Метрика") -> retention_weeks_plot
+
+retention_weeks_plot %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+
+## Row
+
+```{r retention-blocks}
+retention_blocks %>% pull(block) -> blocks
+retention_blocks %>% 
+  pivot_longer(cols = c(`Absolute Retention`, `Relative Retention`)) %>% 
+  mutate(block = factor(block, 
+                          ordered = TRUE,
+         levels = blocks)) %>% 
+  ggplot(aes(block, value, color = name)) +
+  geom_point() +
+  geom_line(aes(group = name)) +
+  scale_x_discrete(labels = c("R", 
+                              "Промежуточный\nпроект",
+                              "Математика\nи статистика",
+                              "Анализ данных",
+                              "Итоговый\nпроект")) +
+  # scale_color_discrete(labels = c(rel_retention = "Относительное удержание",
+  #                                 abs_retention = "Абcолютное удержание")) +
+  labs(title = "Retention // Блоки",
+       x = "Неделя", y = "Процент",
+       color = "Метрика") -> retention_blocks_plot
+
+retention_blocks_plot %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
 
 # L // Лекции {#lec}
 
@@ -739,30 +1048,887 @@ pr_ave_views_perc %>%
 
 # Q // Квизы {#q}
 
+## Row
+
+```{r q-n}
+q_n %>% 
+  mutate(code = factor(code, 
+                       ordered = TRUE, 
+                       levels = paste0("Q", 1:15))) %>% 
+  ggplot(aes(code, n)) +
+  geom_col() +
+  geom_text(aes(
+    y = n - 2,
+    label = (n / n_partic * 100) %>% round() %>% paste0("%")
+  ),
+  color = "white") +
+  labs(x = "Квиз",
+       y = "Количество ответов",
+       title = "Прохождение квизов") -> q_passed_graph
+
+q_passed_graph %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+
+## Row
+
+```{r}
+q_total_scores %>% 
+  full_join(q_max_total_score,
+            join_by(code)) %>% 
+  mutate(ten_score = round(totalScore / max_total_score * 10),
+         code = factor(code,
+                       ordered = TRUE,
+                       levels = paste0("Q", 1:15))) -> q_ten_scores
+
+q_ten_scores %>% 
+  summarise(mean = mean(ten_score),
+            sd = sd(ten_score),
+            .by = code) %>% 
+  pivot_longer(-code) %>% 
+  ggplot(aes(code, value, color = name, group = name)) +
+  geom_line() +
+  geom_point() +
+  geom_hline(yintercept = c(5, 10), linetype = "dashed") +
+  scale_color_discrete(labels = c(mean = "Среднее",
+                                  sd = "Стандартное отклонение")) +
+  labs(x = "Квиз", y = "Средний балл по 10-балльной шкале",
+       color = "Метрика",
+       title = "Средние баллы за квизы") -> q_means_graph
+
+q_means_graph %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+
 ## Row {.tabset}
 
-```{r q1-ts, eval=FALSE}
+```{r q1-ts-dist}
 #| title: Q1
 
-q_total_scores %>% 
-  filter(code == "Q1") %>% 
-  ggplot(aes(totalScore100)) +
-  geom_histogram() +
-  scale_x_continuous(breaks = seq(0, 100, by = 5))
+q_ten_scores %>%
+  filter(code == "Q1") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q1_score_dist
 
-q_item_scores %>%
-  filter(str_detect(task_code, "^q1")) %>% 
-  summarise(score = sum(score),
-            .by = c(itemId, task_code, responseId)) %>% 
-  left_join(q_total_scores %>% 
-              filter(code == "Q1"),
-            join_by(responseId))
-  group_by(task_code) %>% 
-  
-  summarise(mean = mean(score)) %>% 
-  
-  left_join(q_spec, join_by())
+q1_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
 
+```{r q2-ts-dist}
+#| title: Q2
+
+q_ten_scores %>%
+  filter(code == "Q2") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q2_score_dist
+
+q2_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q3-ts-dist}
+#| title: Q3
+
+q_ten_scores %>%
+  filter(code == "Q3") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q3_score_dist
+
+q3_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q4-ts-dist}
+#| title: Q4
+
+q_ten_scores %>%
+  filter(code == "Q4") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q4_score_dist
+
+q4_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q5-ts-dist}
+#| title: Q5
+
+q_ten_scores %>%
+  filter(code == "Q5") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q5_score_dist
+
+q5_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q6-ts-dist}
+#| title: Q6
+
+q_ten_scores %>%
+  filter(code == "Q6") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q6_score_dist
+
+q6_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q7-ts-dist}
+#| title: Q7
+
+q_ten_scores %>%
+  filter(code == "Q7") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q7_score_dist
+
+q7_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q8-ts-dist}
+#| title: Q8
+
+q_ten_scores %>%
+  filter(code == "Q8") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q8_score_dist
+
+q8_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q9-ts-dist}
+#| title: Q9
+
+q_ten_scores %>%
+  filter(code == "Q9") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q9_score_dist
+
+q9_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q10-ts-dist}
+#| title: Q10
+
+q_ten_scores %>%
+  filter(code == "Q10") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q10_score_dist
+
+q10_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q11-ts-dist}
+#| title: Q11
+
+q_ten_scores %>%
+  filter(code == "Q11") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q11_score_dist
+
+q11_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q12-ts-dist}
+#| title: Q12
+
+q_ten_scores %>%
+  filter(code == "Q12") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q12_score_dist
+
+q12_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q13-ts-dist}
+#| title: Q13
+
+q_ten_scores %>%
+  filter(code == "Q13") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q13_score_dist
+
+q13_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q14-ts-dist}
+#| title: Q14
+
+q_ten_scores %>%
+  filter(code == "Q14") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q14_score_dist
+
+q14_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q15-ts-dist}
+#| title: Q15
+
+q_ten_scores %>%
+  filter(code == "Q2") %>%
+  summarise(n = n(),
+            .by = ten_score) %>% 
+  right_join(tibble(ten_score = 1:10)) %>% 
+  replace_na(list(n = 0)) %>% 
+  ggplot(aes(ten_score, n)) +
+  geom_col() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Балл по 10-балльной шкале",
+       y = "Количество",
+       title = "Распределение баллов за квиз") -> q15_score_dist
+
+q15_score_dist %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+
+
+## Row {.tabset}
+
+```{r q1-psy}
+#| title: Q1
+
+q_psymet_props %>%
+  pivot_longer(cols = c(discrimination, difficulty)) %>% 
+  separate(task_code, into = c("quiz", "task"), sep = "_") %>% 
+  mutate(task = as.numeric(task)) -> q_ps_graph
+
+q_ps_graph %>% 
+  filter(code == "Q1") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q1_psy
+
+q1_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q2-psy}
+#| title: Q2
+
+q_ps_graph %>% 
+  filter(code == "Q2") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q2_psy
+
+q2_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q3-psy}
+#| title: Q3
+
+q_ps_graph %>% 
+  filter(code == "Q3") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q3_psy
+
+q3_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q4-psy}
+#| title: Q4
+
+q_ps_graph %>% 
+  filter(code == "Q4") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q4_psy
+
+q4_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q5-psy}
+#| title: Q5
+
+q_ps_graph %>% 
+  filter(code == "Q5") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q5_psy
+
+q5_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q6-psy}
+#| title: Q6
+
+q_ps_graph %>% 
+  filter(code == "Q6") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q6_psy
+
+q6_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q7-psy}
+#| title: Q7
+
+q_ps_graph %>% 
+  filter(code == "Q7") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q7_psy
+
+q7_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q8-psy}
+#| title: Q8
+
+q_ps_graph %>% 
+  filter(code == "Q8") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q8_psy
+
+q8_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q9-psy}
+#| title: Q9
+
+q_ps_graph %>% 
+  filter(code == "Q9") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q9_psy
+
+q9_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q10-psy}
+#| title: Q10
+
+q_ps_graph %>% 
+  filter(code == "Q10") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q10_psy
+
+q10_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q11-psy}
+#| title: Q11
+
+q_ps_graph %>% 
+  filter(code == "Q11") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q11_psy
+
+q11_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q12-psy}
+#| title: Q12
+
+q_ps_graph %>% 
+  filter(code == "Q12") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q12_psy
+
+q12_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q13-psy}
+#| title: Q13
+
+q_ps_graph %>% 
+  filter(code == "Q13") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q13_psy
+
+q13_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q14-psy}
+#| title: Q14
+
+q_ps_graph %>% 
+  filter(code == "Q14") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q14_psy
+
+q14_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
+```
+
+```{r q15-psy}
+#| title: Q15
+
+q_ps_graph %>% 
+  filter(code == "Q15") %>%
+  ggplot(aes(task, value, color = name, shape = name)) +
+  geom_point(size = 2) +
+  geom_hline(
+    yintercept = c(.1, .9),
+    linetype = "dashed",
+    color = "gray50"
+  ) +
+  geom_hline(
+    yintercept = c(.25),
+    linetype = "dotted",
+    color = "gray50"
+  ) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_color_manual(values = c(difficulty = "blue3", 
+                                discrimination = "red3")) +
+  labs(x = "Задание", y = "Значение", color = "Метрика", shape = "Метрика") -> q15_psy
+
+q15_psy %>% 
+  ggplotly() %>% 
+  layout(legend = list(
+    orientation = "h",
+    x = 0, y = -.3
+  ))
 ```
 
 
@@ -772,17 +1938,20 @@ q_item_scores %>%
 ## Row
 
 ```{r hws-ns}
-hws_ns %>%
+hws_ns %>% # pull(hw) %>% unique()
+  mutate(hw = factor(hw,
+                     ordered = TRUE,
+                     levels = paste0("HW", 1:16))) %>% 
   ggplot(aes(hw, n)) +
   geom_col() +
   geom_text(aes(
-    y = n - 1,
+    y = n - 2,
     label = (n / n_partic * 100) %>% round() %>% paste0("%")
   ),
   color = "white") +
   labs(
     x = "Домашка",
-    y = "Количество не сдавших",
+    y = "Количество сданных домашек",
     title = "Динамика сдачи домашек",
     caption = "лейблы отображают процент не сдавших"
   ) -> hw_ns_graph
@@ -2371,5 +3540,101 @@ a_ave_views_perc %>%
   ))
 ```
 
-# J & F // Проекты {#jf}
+# J // Промежуточный проект {#j}
+
+## Row
+
+```{r j-sent}
+j_journal %>% 
+  select(ID, matches("сдано")) %>% 
+  pivot_longer(-ID) %>% 
+  mutate(value = as.logical(value)) %>% 
+  summarise(n = sum(value),
+            .by = name) %>% 
+  ggplot(aes(name, n)) +
+  geom_col() +
+  geom_text(aes(y = n - 1,
+                label = round(n / n_partic * 100) %>% paste0("%")),
+            color = "white") +
+  labs(x = "Группа по дедлайну",
+       y = "Количество",
+       title = "J // Сдача проекта") -> j_sent
+
+j_sent %>% ggplotly()
+```
+
+```{r j-forms}
+j_journal %>% 
+  select(ID, Вариант) %>% 
+  drop_na() %>% 
+  summarise(n = n(),
+            .by = Вариант) %>% 
+  ggplot(aes(Вариант, n)) +
+  geom_col() +
+  labs(y = "Количество",
+       title = "J // Выбор вариантов") -> j_forms
+
+j_forms %>% ggplotly()
+```
+
+## Row
+
+```{r j-criteria}
+tibble(K1 = 2,
+       K2 = 1,
+       K3 = 2,
+       K4 = 2,
+       K5 = 2,
+       K6 = 1,
+       K7 = 4,
+       K8 = 2,
+       K9 = 1) %>% 
+  pivot_longer(cols = everything()) -> j_criteria_max
+
+j_journal %>% 
+  filter(TOTAL != "NS") %>% 
+  select(ID, all_of(paste0("K", 1:9))) %>% 
+  pivot_longer(cols = -ID) %>% 
+  mutate(value = as.numeric(value)) %>% 
+  summarise(mean = mean(value),
+            .by = name) %>% 
+  full_join(j_criteria_max,
+            join_by(name)) %>% 
+  mutate(difficulty = mean / value) -> j_criteria_difficulty
+
+j_journal %>% 
+  filter(TOTAL != "NS") %>% 
+  select(ID, all_of(paste0("K", 1:9))) %>% 
+  pivot_longer(cols = -ID) %>% 
+  mutate(value = as.numeric(value)) %>% 
+  ggplot(aes(name, value)) +
+  geom_point(position = position_jitter(width = .2, height = 0),
+             alpha = .3) +
+  geom_point(data = j_criteria_difficulty,
+             aes(name, mean),
+             color = "red3", size = 3) +
+  labs(x = "Критерий",
+       y = "Балл",
+       title = "J // Распределение баллов по критериям") -> j_criteria
+
+j_criteria %>% ggplotly()
+```
+
+## Row
+
+```{r j-difficulty}
+j_criteria_difficulty %>% 
+  ggplot(aes(name, difficulty)) +
+  geom_hline(yintercept = c(0.05, 0.95), linetype = "dashed") +
+  geom_point() +
+  labs(x = "Критерий",
+       y = "Балл",
+       title = "J // Трудность критериев") -> j_difficulty
+
+j_difficulty %>% ggplotly()
+```
+
+
+# F // Итоговый проект {#f}
+
 
